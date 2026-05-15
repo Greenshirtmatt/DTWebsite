@@ -124,6 +124,17 @@ body {
   text-align: left;
 }
 
+.hero-icon {
+  margin-bottom: 28px;
+}
+
+.hero-icon img {
+  width: clamp(80px, 12vw, 120px);
+  height: clamp(80px, 12vw, 120px);
+  border-radius: 22%;
+  display: block;
+}
+
 .hero-status {
   display: inline-flex;
   align-items: center;
