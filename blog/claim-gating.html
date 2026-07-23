@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Claim Gating: Why I Forbid AI From Saying "You Worked Harder" · Downwind</title>
+<meta name="description" content="Every fitness app tells you that you worked harder. My AI coaching layer is mechanically prevented from saying it — why claim gating belongs in code, not the prompt." />
+<meta name="theme-color" content="#0A0A0B" />
+<meta property="og:title" content="Claim Gating: Why I Forbid AI From Saying &quot;You Worked Harder&quot;" />
+<meta property="og:description" content="Every fitness app tells you that you worked harder. My AI coaching layer is mechanically prevented from saying it — why claim gating belongs in code, not the prompt." />
+<meta property="og:type" content="article" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,340;0,9..144,420;0,9..144,560&family=Inter+Tight:wght@400;450;520;560;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="inner">
+    <a class="brand" href="/">
+      <img src="/logo.svg" width="27" height="27" alt="" style="display:block" />
+      Downwind
+    </a>
+  </div>
+</header>
+
+<main class="post">
+  <a class="back-link" href="/blog/">← The Bump Log</a>
+
+  <h1>Claim Gating: Why I Forbid AI From Saying "You Worked Harder"</h1>
+  <p class="byline">By Matt Sullivan · July 23, 2026</p>
+
+  <p class="post-lead">
+    Every fitness app celebrates your workout and tells you that you worked
+    harder. It is the most natural sentence in the genre: you did the workout,
+    so you must have pushed. My AI coaching layer is mechanically prevented from
+    generating it. Not discouraged by a prompt. Prevented, by a validation
+    function, with a test suite.
+  </p>
+
+  <p>
+    This is the story of why, including the part where a key metric failed an
+    audit against ground truth. I am writing it up because the pattern
+    generalizes far beyond my paddling app: it is the same problem anyone
+    deploying an AI agent that speaks to their customers has to solve, and many
+    teams are currently solving it with prompt instructions and hope.
+  </p>
+
+  <h2>The physics problem underneath the language problem</h2>
+
+  <p>
+    I build analysis software for downwind ocean paddling. A paddler (me) rides
+    wind swell in an outrigger canoe or surfski; the core skill is linking
+    rides, and the core question after a session is whether a fast run was
+    skill, conditions or luck. The app ingests GPS speed traces and
+    deterministically calculates: time and distance on bumps, dead water, ride
+    chains, session efficiency and more.
+  </p>
+
+  <p>
+    Here is the learning that shaped everything: <strong>GPS speed tells you
+    what happened. It cannot tell you why.</strong> A speed increase can come
+    from the paddler's effort or from the ocean carrying the boat, and a GPS
+    trace alone cannot distinguish those two causes. So any sentence of the form
+    "you worked harder," "you wasted energy," "you were pushing through dead
+    water" is, on speed-only data, speculation dressed as coaching.
+  </p>
+
+  <p>
+    The funny thing is that we speak these sentences to ourselves when we review
+    the data. This is our brain doing exactly what it's built to do: construct
+    the most coherent causal story it can conjure only from the data in front of
+    it, actively ignoring any signal it cannot see. "I went faster" is instantly
+    internalized as "I worked harder."
+  </p>
+
+  <p>
+    Most products are designed to generate those sentences because users love
+    positive feedback, and language models produce it fluently. I decided the
+    Downwind coach would not make false claims, and then, more importantly, I
+    decided that "would not" had to be a property of the system rather than a
+    hope about the model.
+  </p>
+
+  <h2>The claim taxonomy</h2>
+
+  <p>
+    Every statement the coaching layer generates is internally classified into
+    one of four claim classes:
+  </p>
+
+  <ul>
+    <li><strong>Outcome:</strong> what happened (speed, duration, distance, counts)</li>
+    <li><strong>Pattern:</strong> how outcomes repeat, change, or compare over time</li>
+    <li><strong>Cost:</strong> physiological load, when heart-rate data is present</li>
+    <li><strong>Causal:</strong> why something happened (effort, propulsion, technique)</li>
+  </ul>
+
+  <p>
+    Before any text is generated, the model is told which evidence exists, as
+    boolean flags: <code>has_speed_data</code>, <code>has_heart_rate_data</code>,
+    <code>has_stroke_evidence</code>, <code>stroke_evidence_quality</code>. The
+    rule set is short:
+  </p>
+
+  <ul>
+    <li>Speed-only sessions (Tier 1) may contain outcomes and patterns. All causal language is forbidden, including indirect phrasing. "You worked harder to maintain speed" is on the banned list explicitly.</li>
+    <li>Causal claims (Tier 2) unlock only when independent stroke evidence exists: a wrist-worn IMU whose acceleration signature reflects paddler biomechanics rather than boat motion. Even then, causal statements require hedging qualifiers ("likely," "consistent with," "suggests," "appears"), and the validator checks that the qualifiers are actually present.</li>
+    <li>Heart rate never substitutes for effort evidence. HR is admitted as cost context only ("this occurred in the lower part of your session's heart-rate range"), because HR lags effort by tens of seconds and cannot disambiguate propulsion from carry.</li>
+    <li>And the rule that ties it together: <strong>if the model is unsure whether a sentence crosses a tier boundary, it must not generate the sentence.</strong> Silence is preferred to speculation.</li>
+  </ul>
+
+  <h2>The audit that made this real</h2>
+
+  <p>The framework was forced by an embarrassing finding.</p>
+
+  <p>
+    An early version of the pipeline relied only on GPS data and labeled certain
+    GPS signatures "effort bumps": short speed wiggles interpreted as the
+    paddler working. Once I started detecting strokes from watch IMU data, I
+    stumbled into checking the interpretation against actual effort: strokes.
+    The GPS-based "effort bump" detection was accurate for only 28% of events.
+  </p>
+
+  <p>
+    The label was the misnomer. The system had been detecting sub-threshold
+    speed noise and calling it human effort because I labeled the signature
+    "effort bump." The coding agent locked that name into code, and carried the
+    semantic association forward into the LLM coaching prompt. Users saw "effort
+    bumps" in reports and were coached on how they expended their effort to
+    catch and link these bumps. It was all error, no signal.
+  </p>
+
+  <p>
+    I retired the term. The deprecation is documented, with the 28% figure and
+    the reason, in the shipped vocabulary rules, not in a private postmortem.
+    Coding agents often refer to this lesson in principle as part of planning
+    and verifying work. Users see effort attribution only when the sensor
+    evidence for it exists.
+  </p>
+
+  <p>
+    I want to be precise about what that finding means and what it does not. It
+    means the app's inference failed validation, and I did not know until I had
+    audited that against an independent signal. It does not mean GPS-based
+    inference is worthless, just misused. The general lesson I take from it:
+    <strong>any AI product making causal claims from a single signal source
+    should assume its causal labels are wrong until checked against an
+    independent one.</strong>
+  </p>
+
+  <h2>Enforcement lives in code, not in the prompt</h2>
+
+  <p>
+    The part of this system I would defend most strongly: enforcement is not
+    prompt instructions. The prompt does state the rules, but prompts are
+    requests, not governance. A governance layer built on requests fails
+    silently under distribution shift, model updates, or an unlucky sample;
+    regardless of what evaluations are in place.
+  </p>
+
+  <p>So the pipeline enforces the rules mechanically:</p>
+
+  <ul>
+    <li>A Tier 1 safety checker validates generated output against forbidden-pattern lists (concepts like effort, propulsion, wasted energy; verbs like "caused," "overpaddled"; and the indirect constructions).</li>
+    <li>A Tier 2 safety checker validates that causal claims carry the required qualifiers.</li>
+    <li>Evidence flags are set dynamically from the sensor-fusion results, not asserted by configuration.</li>
+    <li>When evidence is insufficient for a claim tier, the system degrades to the lower tier. It never silently generates ungated claims.</li>
+    <li>Eval cases generate coaching output for known sessions and verify that no causal language appears where it is not permitted.</li>
+  </ul>
+
+  <p>
+    One more example of the pattern, because it shows the gate is about evidence
+    quality generally, not just causation. Many Garmin watches default to "smart
+    recording," which writes a GPS datapoint every four to seven seconds. Bump
+    detection still runs on that data, but it undercounts, so the rules forbid
+    the model from making bump-count, dead-water, or efficiency claims on any
+    sparse recordings. The report instead states that the session was recorded
+    in a low-rate GPS mode and tells the user how to enable one-second
+    recording. The system is built to admit its input is inadequate rather than
+    produce a falsely confident analysis of it.
+  </p>
+
+  <h2>The business value</h2>
+
+  <p>
+    There is an honest business reason this architecture survived contact with a
+    solo founder's time constraints: the claim gate is also the paywall.
+    GPS-only users get outcomes and patterns free. The wrist sensor unlocks more
+    valuable causal coaching, because the wrist sensor is what makes causal
+    coaching true. The upgrade is: you are not paying to remove an arbitrary
+    feature flag, you are paying for the evidence that permits a stronger class
+    of claim. Epistemics and monetization point the same direction, which
+    enables a defensible pricing strategy.
+  </p>
+
+  <h2>Why this matters beyond paddling</h2>
+
+  <p>
+    Replace "paddler" with "customer" and "effort" with any fact your AI agent
+    might assert, and this is the agentic deployment problem I spend my
+    consulting time on. When an AI system speaks for your company, the questions
+    are identical:
+  </p>
+
+  <ul>
+    <li>What classes of claim is the system allowed to make?</li>
+    <li>What evidence gates each class?</li>
+    <li>Is the gate enforced in code, with tests, or is it a paragraph in a prompt?</li>
+    <li>What happens when the evidence is missing: does the system degrade explicitly, or improvise?</li>
+    <li>And when the model is unsure whether a statement is permitted, does it stay silent?</li>
+  </ul>
+
+  <p>
+    My experience across a small consumer product and much larger enterprise
+    agentic systems is consistent on one point: the teams that treat "what is
+    the AI allowed to say" as an architecture decision ship systems they can
+    defend, and the teams that treat it as a prompt-writing task inadvertently
+    find out what their system really says from their users.
+  </p>
+
+  <p>
+    The single sentence I would put at the top of any such system's rules is the
+    one at the top of ours: describe outcomes freely, make causal claims only
+    when evidence is present, and prefer silence to speculation.
+  </p>
+
+  <p class="post-note">
+    I build <a href="/">Downwind</a>, an analysis and coaching tool for downwind
+    ocean paddling, and consult on agentic AI deployment for mid-market
+    companies through <a href="https://outsideproduct.com">Outside Product</a>.
+    The claim-rules document, claim taxonomy, and the 28% audit described here
+    are from the shipped system.
+  </p>
+
+</main>
+
+<footer class="site-footer">
+  <div class="footer-row">
+    <div class="footer-brand">
+      <img src="/logo.svg" width="20" height="20" alt="" style="display:block" />
+      <span>© 2026 Downwind</span>
+    </div>
+    <nav class="footer-nav" aria-label="Site">
+      <a href="/blog/">The Bump Log</a>
+      <a href="/privacy.html">Privacy</a>
+      <a href="/terms.html">Terms</a>
+      <a href="mailto:support@downwindtracker.com">Support</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>

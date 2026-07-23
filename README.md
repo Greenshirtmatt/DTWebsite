@@ -16,7 +16,10 @@ The landing page (`index.html`) is **self-contained** — its styles live in an 
 ├── privacy.html      # Privacy Policy       → links /styles.css
 ├── terms.html        # Terms of Use / EULA  → links /styles.css
 ├── 404.html          # Not-found page       → links /styles.css
-├── styles.css        # Shared styles for the legal/utility pages only
+├── blog/             # "The Bump Log" — writing section (each page links /styles.css)
+│   ├── index.html    # Post listing (add one <li class="bumplog-item"> per post)
+│   └── claim-gating.html
+├── styles.css        # Shared styles for the legal/utility/blog pages
 ├── logo.svg          # App logo (used in the hero)
 ├── favicon.svg       # SVG favicon
 ├── robots.txt

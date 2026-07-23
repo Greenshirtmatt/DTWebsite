@@ -14,6 +14,12 @@
   to = "/terms.html"
   status = 200
 
+# Pretty URL for blog posts (the /blog/ index resolves automatically)
+[[redirects]]
+  from = "/blog/claim-gating"
+  to = "/blog/claim-gating.html"
+  status = 200
+
 # 404 fallback
 [[redirects]]
   from = "/*"

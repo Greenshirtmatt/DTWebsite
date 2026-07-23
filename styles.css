@@ -49,8 +49,8 @@ a:hover{color:var(--ride)}
 .brand:hover{color:var(--text-1)}
 .brand svg{display:block}
 
-/* legal page body */
-.legal-page{
+/* legal + post body */
+.legal-page,.post{
   max-width:760px;margin:0 auto;
   padding:72px 24px 96px;
 }
@@ -59,7 +59,7 @@ a:hover{color:var(--ride)}
   color:var(--text-3);
 }
 .back-link:hover{color:var(--text-2)}
-.legal-page h1{
+.legal-page h1,.post h1{
   font-family:var(--font-display);font-weight:420;
   font-size:clamp(32px,4.5vw,46px);line-height:1.1;letter-spacing:-.012em;
   margin-top:28px;
@@ -68,20 +68,20 @@ a:hover{color:var(--ride)}
   font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;
   color:var(--text-3);margin:14px 0 40px;
 }
-.legal-page p{color:var(--text-2);margin:0 0 18px;font-size:15.5px}
-.legal-page p strong{color:var(--text-1);font-weight:520}
-.legal-page h2{
+.legal-page p,.post p{color:var(--text-2);margin:0 0 18px;font-size:15.5px}
+.legal-page p strong,.post p strong{color:var(--text-1);font-weight:520}
+.legal-page h2,.post h2{
   font-size:19px;font-weight:560;letter-spacing:-.01em;color:var(--text-1);
   margin:44px 0 14px;padding-top:28px;
   border-top:1px solid var(--border-subtle);
 }
-.legal-page h3{
+.legal-page h3,.post h3{
   font-size:15.5px;font-weight:560;color:var(--text-1);
   margin:26px 0 10px;
 }
-.legal-page ul{margin:0 0 18px 20px;color:var(--text-2)}
-.legal-page li{margin-bottom:8px;font-size:15px}
-.legal-page em{color:var(--text-3)}
+.legal-page ul,.post ul{margin:0 0 18px 20px;color:var(--text-2)}
+.legal-page li,.post li{margin-bottom:8px;font-size:15px}
+.legal-page em,.post em{color:var(--text-3)}
 
 /* data table (privacy) */
 .legal-page table{
@@ -142,3 +142,50 @@ a:hover{color:var(--ride)}
   transition:background .18s ease;
 }
 .notfound .home-btn:hover{background:var(--teal-bright);color:#fff}
+
+/* ---------- blog post (The Bump Log) ---------- */
+.byline{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;
+  color:var(--text-3);margin:14px 0 40px;
+}
+.post-lead{
+  color:var(--text-1)!important;font-size:18px!important;line-height:1.6;
+  margin-bottom:26px!important;
+}
+.post code{
+  font-family:var(--font-mono);font-size:.86em;
+  background:var(--surface-1);border:1px solid var(--border-subtle);
+  padding:.08em .34em;border-radius:5px;color:var(--text-1);
+}
+.post-note{
+  margin-top:52px;padding-top:26px;
+  border-top:1px solid var(--border-subtle);
+  font-size:14px!important;color:var(--text-3)!important;font-style:italic;
+}
+.post-note a{color:var(--teal-bright)}
+.post-note a:hover{color:var(--ride)}
+
+/* ---------- blog index (The Bump Log) ---------- */
+.bumplog{max-width:760px;margin:0 auto;padding:72px 24px 96px}
+.bumplog h1{
+  font-family:var(--font-display);font-weight:420;
+  font-size:clamp(32px,4.5vw,46px);line-height:1.1;letter-spacing:-.012em;
+  margin-top:28px;
+}
+.bumplog .dek{color:var(--text-2);font-size:15.5px;margin:16px 0 8px}
+.bumplog-list{margin-top:28px;list-style:none}
+.bumplog-item{
+  padding:28px 0;border-top:1px solid var(--border-subtle);
+}
+.bumplog-item .date{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;
+  color:var(--text-3);
+}
+.bumplog-item h2{
+  font-family:var(--font-display);font-weight:420;
+  font-size:clamp(21px,2.4vw,26px);line-height:1.15;letter-spacing:-.01em;
+  margin:10px 0 8px;
+}
+.bumplog-item h2 a{color:var(--text-1)}
+.bumplog-item h2 a:hover{color:var(--teal-bright)}
+.bumplog-item .excerpt{color:var(--text-2);font-size:15px;margin:0}
