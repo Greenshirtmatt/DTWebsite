@@ -1,299 +1,930 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>DownwindTracker — Record OC1 downwind sessions from Apple Watch</title>
-<meta name="description" content="DownwindTracker captures IMU and GPS data from your Apple Watch during outrigger canoe downwind paddles, then ships it to your iPhone for upload and bump analysis." />
-<meta name="theme-color" content="#0A0A0B" />
-<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="/styles.css" />
-<meta property="og:title" content="DownwindTracker" />
-<meta property="og:description" content="Record OC1 downwind paddle sessions on Apple Watch. Upload to iPhone for bump and dead-water analysis." />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://www.downwindtracker.com/" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Downwind · The training-analysis app for downwind paddling</title>
+<meta name="description" content="Know if that run was actually good. Downwind turns your GPS trace into rides, links, and dead water, and tracks whether you're riding more of the ocean.">
+<meta property="og:title" content="Downwind · The training-analysis app for downwind paddling">
+<meta property="og:description" content="Know if that run was actually good. Downwind turns your GPS trace into rides, links, and dead water.">
+<meta property="og:type" content="website">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,340;0,9..144,420;0,9..144,560;1,9..144,340&family=Inter+Tight:ital,wght@0,400;0,450;0,520;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0A0A0B;
+  --surface-1:#18181B;
+  --surface-2:#27272A;
+  --border:#27272A;
+  --border-subtle:#1E1E21;
+  --text-1:#FAFAFA;
+  --text-2:#A1A1AA;
+  --text-3:#71717A;
+  --teal:#2B7A8C;
+  --teal-bright:#3E9DB2;
+  --ride:#2DD4BF;
+  --dead:#F97316;
+  --amber:#F59E0B;
+  --font-display:"Fraunces",Georgia,serif;
+  --font-body:"Inter Tight",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --max:1120px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text-1);
+  font-family:var(--font-body);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+::selection{background:rgba(45,212,191,.25);color:var(--text-1)}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
+
+/* ---------- shared vocabulary ---------- */
+.eyebrow{
+  font-family:var(--font-mono);
+  font-size:11px;
+  font-weight:500;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--text-3);
+}
+.eyebrow .tick{color:var(--ride)}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums lining-nums}
+.rule{border:none;border-top:1px solid var(--border-subtle)}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--font-body);font-size:14px;font-weight:520;
+  padding:11px 22px;border-radius:8px;cursor:pointer;
+  border:1px solid transparent;
+  transition:background .18s ease,border-color .18s ease,color .18s ease;
+}
+.btn-primary{background:var(--teal);color:#fff}
+.btn-primary:hover{background:var(--teal-bright)}
+.btn-ghost{background:transparent;color:var(--text-2);border-color:var(--surface-2)}
+.btn-ghost:hover{color:var(--text-1);border-color:var(--text-3)}
+
+/* ---------- nav ---------- */
+nav{
+  position:sticky;top:0;z-index:50;
+  background:rgba(10,10,11,.82);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border-subtle);
+}
+.nav-inner{
+  max-width:var(--max);margin:0 auto;padding:0 24px;
+  height:60px;display:flex;align-items:center;gap:32px;
+}
+.wordmark{display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px;letter-spacing:-.01em}
+.wordmark svg{display:block}
+.nav-links{display:flex;gap:26px;margin-left:auto}
+.nav-links a{font-size:13.5px;color:var(--text-2);transition:color .15s}
+.nav-links a:hover{color:var(--text-1)}
+.nav-cta{margin-left:8px}
+@media(max-width:760px){.nav-links{display:none}}
+
+/* ---------- hero ---------- */
+.hero{padding:96px 0 40px;position:relative}
+.hero .eyebrow{margin-bottom:26px}
+.hero h1{
+  font-family:var(--font-display);
+  font-weight:420;
+  font-size:clamp(40px,6.2vw,72px);
+  line-height:1.04;
+  letter-spacing:-.015em;
+  max-width:15ch;
+}
+.hero h1 em{font-style:italic;font-weight:340;color:var(--ride)}
+.hero .sub{
+  margin-top:26px;max-width:56ch;
+  font-size:18px;color:var(--text-2);line-height:1.65;
+}
+.hero .sub strong{color:var(--text-1);font-weight:520}
+.hero-actions{margin-top:36px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.status-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;
+  color:var(--text-3);padding:7px 14px;
+  border:1px solid var(--border-subtle);border-radius:999px;
+}
+.status-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--ride);box-shadow:0 0 8px rgba(45,212,191,.6)}
+
+/* ---------- hero chart ---------- */
+.analysis{padding:44px 0 0}
+.chart-frame{position:relative}
+.chart-caption{
+  display:flex;justify-content:space-between;align-items:baseline;
+  padding-bottom:14px;gap:16px;flex-wrap:wrap;
+}
+.chart-caption .left{font-family:var(--font-mono);font-size:11.5px;color:var(--text-3);letter-spacing:.04em}
+.chart-caption .left b{color:var(--text-2);font-weight:500}
+.legend{display:flex;gap:20px;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:11px;color:var(--text-3);letter-spacing:.04em}
+.legend i{width:14px;height:4px;border-radius:2px;display:inline-block}
+.legend .k-raw i{background:#4A4A52}
+.legend .k-ride i{background:var(--ride)}
+.legend .k-dead i{background:var(--dead)}
+#trace{width:100%;height:auto;display:block}
+#trace text{font-family:var(--font-mono)}
+.stat-strip{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  border-top:1px solid var(--border-subtle);
+  margin-top:6px;
+}
+.stat{padding:22px 8px 8px;border-left:1px solid var(--border-subtle)}
+.stat:first-child{border-left:none;padding-left:0}
+.stat .label{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3)}
+.stat .value{
+  margin-top:8px;font-family:var(--font-mono);font-weight:500;
+  font-size:clamp(22px,3vw,32px);letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;color:var(--text-1);
+}
+.stat .value .unit{font-size:.5em;color:var(--text-3);letter-spacing:0;margin-left:2px}
+.stat.ride .value{color:var(--ride)}
+.stat.dead .value{color:var(--dead)}
+@media(max-width:700px){
+  .stat-strip{grid-template-columns:repeat(2,1fr);row-gap:8px}
+  .stat:nth-child(3){border-left:none;padding-left:0}
+}
+
+/* ---------- sections ---------- */
+section.block{padding:110px 0;border-top:1px solid var(--border-subtle)}
+.section-head{margin-bottom:56px;max-width:62ch}
+.section-head .eyebrow{margin-bottom:18px}
+.section-head h2{
+  font-family:var(--font-display);font-weight:420;
+  font-size:clamp(28px,3.6vw,42px);line-height:1.12;letter-spacing:-.01em;
+}
+.section-head p{margin-top:18px;color:var(--text-2);font-size:16.5px;max-width:58ch}
+
+/* ---------- ledger: feel vs evidence ---------- */
+.ledger{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border-subtle);border-radius:12px;overflow:hidden}
+.ledger-col{padding:40px 40px 32px}
+.ledger-col+.ledger-col{border-left:1px solid var(--border-subtle)}
+.ledger-col h3{font-family:var(--font-mono);font-size:11px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;margin-bottom:28px}
+.ledger-col.feel h3{color:var(--text-3)}
+.ledger-col.trace h3{color:var(--ride)}
+.ledger-col.trace{background:var(--surface-1)}
+.feel-line{
+  font-family:var(--font-display);font-style:italic;font-weight:340;
+  font-size:19px;line-height:1.5;color:var(--text-2);
+  padding:14px 0;border-bottom:1px solid var(--border-subtle);
+}
+.feel-line:last-of-type{border-bottom:none}
+.feel-line .who{display:block;font-family:var(--font-mono);font-style:normal;font-size:10.5px;letter-spacing:.1em;color:var(--text-3);margin-top:6px;text-transform:uppercase}
+.trace-row{
+  display:flex;justify-content:space-between;align-items:baseline;gap:16px;
+  padding:13px 0;border-bottom:1px solid var(--border-subtle);
+}
+.trace-row:last-of-type{border-bottom:none}
+.trace-row .q{font-size:14.5px;color:var(--text-2)}
+.trace-row .a{font-family:var(--font-mono);font-size:15px;font-weight:500;color:var(--text-1);white-space:nowrap;font-variant-numeric:tabular-nums}
+.trace-row .a.up{color:var(--ride)}
+.trace-row .a.down{color:var(--dead)}
+.ledger-note{margin-top:22px;font-size:14px;color:var(--text-3);max-width:70ch}
+@media(max-width:820px){.ledger{grid-template-columns:1fr}.ledger-col+.ledger-col{border-left:none;border-top:1px solid var(--border-subtle)}}
+
+/* ---------- vocabulary ---------- */
+.vocab{display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+.vocab-item{padding:0 40px 0 0}
+.vocab-item+.vocab-item{padding-left:40px;border-left:1px solid var(--border-subtle)}
+.vocab-item .glyph{height:56px;display:flex;align-items:center;margin-bottom:20px}
+.vocab-item h3{font-size:20px;font-weight:520;letter-spacing:-.01em;display:flex;align-items:baseline;gap:10px}
+.vocab-item h3 .tag{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;font-weight:500;text-transform:uppercase}
+.vocab-item.v-ride h3 .tag{color:var(--ride)}
+.vocab-item.v-link h3 .tag{color:var(--teal-bright)}
+.vocab-item.v-dead h3 .tag{color:var(--dead)}
+.vocab-item p{margin-top:12px;font-size:14.5px;color:var(--text-2);line-height:1.65}
+@media(max-width:820px){
+  .vocab{grid-template-columns:1fr;gap:44px}
+  .vocab-item,.vocab-item+.vocab-item{padding:0;border-left:none}
+}
+
+/* ---------- baseline ---------- */
+.baseline-grid{display:grid;grid-template-columns:5fr 6fr;gap:72px;align-items:center}
+.baseline-copy p{color:var(--text-2);font-size:16px;margin-top:16px}
+.baseline-copy p strong{color:var(--text-1);font-weight:520}
+.route-tabs{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap}
+.route-tab{
+  font-family:var(--font-mono);font-size:11.5px;letter-spacing:.04em;
+  padding:6px 13px;border-radius:6px;border:1px solid var(--border-subtle);
+  color:var(--text-3);
+}
+.route-tab.active{background:rgba(43,122,140,.18);border-color:rgba(43,122,140,.4);color:var(--ride)}
+#baselineChart{width:100%;height:auto;display:block}
+#baselineChart text{font-family:var(--font-mono)}
+.baseline-read{
+  margin-top:18px;display:flex;gap:10px;align-items:baseline;
+  font-family:var(--font-mono);font-size:12px;color:var(--text-3);
+}
+.baseline-read b{color:var(--ride);font-weight:500}
+@media(max-width:880px){.baseline-grid{grid-template-columns:1fr;gap:48px}}
+
+/* ---------- coaching ---------- */
+.coach-grid{display:grid;grid-template-columns:6fr 5fr;gap:72px;align-items:start}
+.coach-copy p{color:var(--text-2);font-size:16px;margin-top:16px}
+.coach-copy p strong{color:var(--text-1);font-weight:520}
+.report{
+  border:1px solid var(--border-subtle);border-radius:12px;overflow:hidden;
+  background:var(--surface-1);
+}
+.report-head{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 20px;border-bottom:1px solid var(--border-subtle);
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--text-3);
+}
+.report-head .dot{width:7px;height:7px;border-radius:50%;background:#22C55E}
+.report-line{padding:20px 20px 20px 24px;border-bottom:1px solid var(--border-subtle);position:relative}
+.report-line:last-child{border-bottom:none}
+.report-line::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px}
+.report-line.says::before{background:var(--ride)}
+.report-line.withheld::before{background:var(--surface-2)}
+.report-line.unlocked::before{background:var(--teal)}
+.report-line .badge{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--font-mono);font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;
+  padding:3px 9px;border-radius:4px;margin-bottom:10px;
+}
+.report-line.says .badge{background:rgba(45,212,191,.12);color:var(--ride)}
+.report-line.withheld .badge{background:rgba(113,113,122,.15);color:var(--text-3)}
+.report-line.unlocked .badge{background:rgba(43,122,140,.2);color:var(--teal-bright)}
+.report-line p{font-size:14.5px;line-height:1.6;color:var(--text-2)}
+.report-line p b{color:var(--text-1);font-weight:520}
+.report-line.withheld p{color:var(--text-3)}
+.report-line.withheld p .strike{text-decoration:line-through;text-decoration-color:rgba(113,113,122,.6)}
+.report-line .req{
+  display:block;margin-top:10px;font-family:var(--font-mono);
+  font-size:11px;color:var(--amber);letter-spacing:.03em;
+}
+@media(max-width:880px){.coach-grid{grid-template-columns:1fr;gap:44px}}
+
+/* ---------- fit ---------- */
+.fit-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.fit-col{padding-right:56px}
+.fit-col+.fit-col{padding-right:0;padding-left:56px;border-left:1px solid var(--border-subtle)}
+.fit-col h3{font-family:var(--font-display);font-weight:420;font-size:26px;letter-spacing:-.01em;line-height:1.2}
+.fit-col>p{margin-top:14px;color:var(--text-2);font-size:15.5px}
+.fit-list{margin-top:26px;list-style:none}
+.fit-list li{
+  display:flex;gap:14px;align-items:baseline;
+  padding:12px 0;border-top:1px solid var(--border-subtle);
+  font-size:14.5px;color:var(--text-2);
+}
+.fit-list li .m{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;color:var(--ride);text-transform:uppercase;flex:0 0 96px}
+.fit-list li b{color:var(--text-1);font-weight:520}
+@media(max-width:820px){
+  .fit-grid{grid-template-columns:1fr;gap:52px}
+  .fit-col,.fit-col+.fit-col{padding:0;border-left:none}
+}
+
+/* ---------- closing ---------- */
+.closing{padding:130px 0 100px;border-top:1px solid var(--border-subtle);text-align:center;position:relative;overflow:hidden}
+.closing .eyebrow{margin-bottom:24px}
+.closing h2{
+  font-family:var(--font-display);font-weight:420;
+  font-size:clamp(30px,4.6vw,54px);line-height:1.1;letter-spacing:-.012em;
+  max-width:20ch;margin:0 auto;
+}
+.closing h2 em{font-style:italic;font-weight:340;color:var(--ride)}
+.closing p{margin:22px auto 0;max-width:52ch;color:var(--text-2);font-size:16.5px}
+.closing .hero-actions{justify-content:center;margin-top:38px}
+.closing-trace{position:absolute;left:0;right:0;bottom:-8px;height:120px;opacity:.35;pointer-events:none}
+.closing-trace svg{width:100%;height:100%;display:block}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--border-subtle);padding:34px 0}
+.foot-inner{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.foot-inner .copy{font-family:var(--font-mono);font-size:11.5px;color:var(--text-3)}
+.foot-links{margin-left:auto;display:flex;gap:22px}
+.foot-links a{font-size:13px;color:var(--text-3);transition:color .15s}
+.foot-links a:hover{color:var(--text-2)}
+
+
+/* ---------- colophon (brand band) ---------- */
+.colophon{padding:96px 0}
+.colophon-band{text-align:center}
+#colophonSvg{width:100%;max-width:1160px;height:auto;display:block;margin:0 auto}
+.colophon-caption{
+  margin-top:6px;font-family:var(--font-mono);font-size:12px;
+  letter-spacing:.05em;color:var(--text-3);
+}
+
+/* ---------- reveal motion ---------- */
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .reveal{opacity:1;transform:none;transition:none}
+}
+</style>
 </head>
 <body>
 
-<!-- Decorative background layers -->
-<div class="bg-grain" aria-hidden="true"></div>
-<div class="bg-glow" aria-hidden="true"></div>
+<nav>
+  <div class="nav-inner">
+    <a class="wordmark" href="#top" aria-label="Downwind home">
+      <img src="/logo.svg" width="27" height="27" alt="" style="display:block" />
+      Downwind
+    </a>
+    <div class="nav-links">
+      <a href="#analysis">How it reads a run</a>
+      <a href="#baseline">Your baseline</a>
+      <a href="#coaching">Coaching</a>
+      <a href="#fit">Who it's for</a>
+    </div>
+    <a class="btn btn-primary nav-cta" href="#beta">Join the beta</a>
+  </div>
+</nav>
 
-<!-- Header -->
-<header class="site-header">
-  <a class="brand" href="/">
-    <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-      <path d="M2 20 Q 8 12, 14 18 T 26 16 T 30 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      <path d="M2 24 Q 8 16, 14 22 T 26 20 T 30 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
-    </svg>
-    <span class="brand-word">DownwindTracker</span>
-  </a>
-  <nav class="site-nav" aria-label="Primary">
-    <a href="#how">How it works</a>
-    <a href="#what">What it captures</a>
-    <a href="#faq">FAQ</a>
-    <a href="#support">Support</a>
-  </nav>
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="eyebrow"><span class="tick">▲</span>&nbsp; The training-analysis app for downwind paddling</div>
+    <h1>Know if that run was <em>actually</em> good.</h1>
+    <p class="sub">Downwind turns your GPS trace into <strong>rides, links, and dead water</strong>, and tracks whether you're riding more of the ocean. From the watch you already wear. On the runs you already repeat.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#beta">Join the beta</a>
+      <!-- TODO(demo): once the shared demo account / read-only demo route exists on the
+           live web app, point this at it (e.g. https://downwind-web-prod.fly.dev/demo)
+           instead of the in-page anchor. Blocked on auth: the live site currently
+           requires credentials. Same for the matching button in the closing section. -->
+      <a class="btn btn-ghost" href="#analysis">See a run analyzed</a>
+      <span class="status-pill"><span class="dot"></span>TestFlight beta · Garmin FIT · Apple Watch</span>
+    </div>
+  </div>
 </header>
 
-<main>
-
-  <!-- HERO -->
-  <section class="hero">
-    <div class="hero-icon">
-      <img src="/logo.svg" alt="DownwindTracker app icon" width="120" height="120">
-    </div>
-    <div class="hero-status" role="status">
-      <span class="dot"></span>
-      <span>TestFlight beta, App Store launch in progress</span>
-    </div>
-
-    <h1 class="hero-title">
-      Every stroke logged.<br/>
-      Every bump, <em>linked</em>.
-    </h1>
-
-    <p class="hero-lede">
-      DownwindTracker is a capture device for OC1 and surf ski paddlers. Your Apple Watch records
-      <strong>100&nbsp;Hz IMU</strong> and <strong>1&nbsp;Hz GPS</strong> through the paddle,
-      then transfers the session to your iPhone for upload and downwind analysis.
-    </p>
-
-    <div class="hero-cta">
-      <a class="btn btn-primary disabled" aria-disabled="true">
-        Coming to the App Store
-        <span class="btn-sub">Pre-launch</span>
-      </a>
-      <a class="btn btn-ghost" href="#support">Request TestFlight access</a>
-    </div>
-
-    <div class="hero-meta">
-      <span>iOS&nbsp;26.2+</span>
-      <span aria-hidden="true">·</span>
-      <span>watchOS&nbsp;26.2+</span>
-      <span aria-hidden="true">·</span>
-      <span>Built for Apple Watch Ultra</span>
-    </div>
-
-    <!-- Wave illustration -->
-    <svg class="hero-wave" viewBox="0 0 1200 300" preserveAspectRatio="none" aria-hidden="true">
-      <defs>
-        <linearGradient id="waveFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#2B7A8C" stop-opacity="0.35"/>
-          <stop offset="100%" stop-color="#2B7A8C" stop-opacity="0"/>
-        </linearGradient>
-      </defs>
-      <path d="M0,180 C150,120 300,240 450,170 C600,100 750,220 900,160 C1050,100 1150,180 1200,150 L1200,300 L0,300 Z" fill="url(#waveFill)"/>
-      <path d="M0,200 C150,160 300,250 450,200 C600,150 750,240 900,190 C1050,140 1150,210 1200,180" fill="none" stroke="#2B7A8C" stroke-width="1.5" opacity="0.6"/>
-      <path d="M0,230 C200,200 350,260 550,225 C750,190 900,250 1100,220 L1200,215" fill="none" stroke="#2B7A8C" stroke-width="1" opacity="0.3"/>
-    </svg>
-  </section>
-
-  <!-- HOW IT WORKS -->
-  <section id="how" class="section how">
-    <div class="section-eyebrow">01 — Architecture</div>
-    <h2 class="section-title">Watch records. Phone uploads. Backend analyzes.</h2>
-    <p class="section-lede">
-      The app is intentionally narrow in scope: reliable capture and reliable delivery.
-      All bump detection, dead-water identification, and coaching happens server-side, which means
-      the watch app stays small, the phone app stays simple, and your data stays portable.
-    </p>
-
-    <div class="how-grid">
-      <article class="how-step">
-        <div class="how-step-num">01</div>
-        <h3>Press start on the watch</h3>
-        <p>
-          Apple Watch Ultra users can map it to the Action Button via <code>StartPaddleIntent</code>.
-          The app opens a HealthKit workout session so the watch keeps recording in the background.
-        </p>
-        <ul class="how-step-list">
-          <li>HealthKit workout for background runtime</li>
-          <li>Core Motion at ~100&nbsp;Hz with write recovery</li>
-          <li>Core Location at ~1&nbsp;Hz for route and speed</li>
-        </ul>
-      </article>
-
-      <article class="how-step">
-        <div class="how-step-num">02</div>
-        <h3>Stop, and the session bundle ships to your iPhone</h3>
-        <p>
-          When you end the recording, the watch packages two CSVs (accelerometer and GPS) plus
-          metadata (duration, sample count, observed Hz, SHA-256 checksums, dropped sample counts)
-          and transfers them over WatchConnectivity.
-        </p>
-        <ul class="how-step-list">
-          <li>Lossless CSV format compatible with the Sensor Logger schema</li>
-          <li>Checksummed transfer with retry</li>
-          <li>Phone queues uploads with exponential backoff</li>
-        </ul>
-      </article>
-
-      <article class="how-step">
-        <div class="how-step-num">03</div>
-        <h3>Upload, annotate, and get the analysis back</h3>
-        <p>
-          Sign in once with a Supabase magic link. Sessions sync to the Downwind Cloud API
-          (certificate-pinned HTTPS). After analysis you get bumps, dead-water sections,
-          best 60-second average speed, and a coaching summary.
-        </p>
-        <ul class="how-step-list">
-          <li>Pre-analysis annotation (session type, conditions, focus)</li>
-          <li>Verdict deltas against your prior sessions</li>
-          <li>Full session history on device</li>
-        </ul>
-      </article>
-    </div>
-  </section>
-
-  <!-- WHAT IT CAPTURES (also serves as App Privacy preview) -->
-  <section id="what" class="section capture">
-    <div class="section-eyebrow">02 — Data captured</div>
-    <h2 class="section-title">Two CSV files. One JSON of metadata. Nothing else.</h2>
-    <p class="section-lede">
-      Transparent by design. Here is exactly what each session contains.
-    </p>
-
-    <div class="capture-grid">
-      <div class="capture-card">
-        <div class="capture-card-head">
-          <span class="capture-tag">required</span>
-          <h3>WatchAccelerometerUncalibrated.csv</h3>
+<section class="analysis" id="analysis">
+  <div class="wrap">
+    <div class="chart-frame">
+      <div class="chart-caption">
+        <div class="left"><b>Maliko Run</b> · OC1 · 10-min excerpt · 1 Hz GPS · watch: Garmin</div>
+        <div class="legend">
+          <span class="k-raw"><i></i>raw trace</span>
+          <span class="k-ride"><i></i>ride</span>
+          <span class="k-dead"><i></i>dead water</span>
         </div>
-        <pre class="capture-code"><code>time, seconds_elapsed, x, y, z</code></pre>
-        <p>Raw 3-axis acceleration in the device frame at ~100&nbsp;Hz. Nanosecond epoch timestamps.</p>
       </div>
-
-      <div class="capture-card">
-        <div class="capture-card-head">
-          <span class="capture-tag">optional</span>
-          <h3>WatchLocation.csv</h3>
+      <svg id="trace" viewBox="0 0 1180 320" preserveAspectRatio="xMidYMid meet" role="img" aria-label="A GPS speed trace being segmented into rides, links, and dead water"></svg>
+      <div class="stat-strip">
+        <div class="stat ride">
+          <div class="label">Time on bumps</div>
+          <div class="value"><span data-count="55.7" data-decimals="1">0.0</span><span class="unit">%</span></div>
         </div>
-        <pre class="capture-code"><code>time, seconds_elapsed, latitude, longitude,
-ellipsoidalAltitude, altitude, course, speed,
-verticalAccuracy, horizontalAccuracy,
-speedAccuracy, courseAccuracy</code></pre>
-        <p>Core Location output at ~1&nbsp;Hz. Speed in meters per second; backend normalizes units.</p>
-      </div>
-
-      <div class="capture-card capture-card-meta">
-        <div class="capture-card-head">
-          <span class="capture-tag">metadata</span>
-          <h3>Session bundle dict</h3>
+        <div class="stat ride">
+          <div class="label">Distance on bumps</div>
+          <div class="value"><span data-count="63.9" data-decimals="1">0.0</span><span class="unit">%</span></div>
         </div>
-        <ul class="capture-meta-list">
-          <li>Session ID</li>
-          <li>Duration and sample count</li>
-          <li>Recording timestamp</li>
-          <li>Observed Hz per stream</li>
-          <li>Schema version</li>
-          <li>SHA-256 checksums</li>
-          <li>Dropped sample counts</li>
-        </ul>
+        <div class="stat">
+          <div class="label">Longest link</div>
+          <div class="value"><span data-count="5" data-decimals="0">0</span><span class="unit">rides</span></div>
+        </div>
+        <div class="stat dead">
+          <div class="label">Dead water</div>
+          <div class="value"><span id="deadClock">0:00</span></div>
+        </div>
       </div>
     </div>
-
-    <p class="capture-note">
-      The watch never uploads directly. The phone is the only client that talks to the backend,
-      and only when you press upload.
-    </p>
-  </section>
-
-  <!-- FAQ -->
-  <section id="faq" class="section faq">
-    <div class="section-eyebrow">03 — Questions</div>
-    <h2 class="section-title">FAQ</h2>
-
-    <details>
-      <summary>Why is the watch app a "capture device" and not an analysis app?</summary>
-      <p>
-        Bump detection, dead-water identification, and coaching are computationally non-trivial
-        and benefit from frequent iteration. Keeping the watch and phone scope narrow means the
-        analysis engine can improve without forcing app updates, and your raw sensor data is
-        always reprocessable against newer models.
-      </p>
-    </details>
-
-    <details>
-      <summary>Do I need an Apple Watch Ultra?</summary>
-      <p>
-        No, but the Action Button integration (one-press start from the wrist) requires Apple Watch
-        Ultra. Standard Apple Watch models running watchOS 26.2 or later can still record sessions
-        from the in-app start screen.
-      </p>
-    </details>
-
-    <details>
-      <summary>What boats and disciplines does this support?</summary>
-      <p>
-        The app is built for OC1 outrigger canoe and surf ski downwind sessions. The capture
-        format is sport-agnostic, so V1, V6, SUP downwind, and other paddle disciplines will
-        record correctly; the analysis is tuned specifically for ocean downwind bump-running.
-      </p>
-    </details>
-
-    <details>
-      <summary>How is my data stored?</summary>
-      <p>
-        Auth is handled by Supabase using magic-link email sign-in. Sessions upload to the
-        Downwind Cloud API over certificate-pinned HTTPS. See the
-        <a href="/privacy.html">Privacy Policy</a> for full detail.
-      </p>
-    </details>
-
-    <details>
-      <summary>When is the App Store launch?</summary>
-      <p>
-        The app is currently in TestFlight beta. There is no committed App Store launch date yet.
-        Email <a href="mailto:support@downwindtracker.com">support@downwindtracker.com</a> to
-        request TestFlight access.
-      </p>
-    </details>
-  </section>
-
-  <!-- SUPPORT -->
-  <section id="support" class="section support">
-    <div class="support-card">
-      <div class="section-eyebrow">04 — Support</div>
-      <h2 class="section-title">Get help, request access, or report a bug</h2>
-      <p>
-        DownwindTracker is built and maintained by one person. Emails are answered directly.
-      </p>
-      <a class="btn btn-primary" href="mailto:support@downwindtracker.com">support@downwindtracker.com</a>
-      <p class="support-meta">
-        Please include your iOS version, watchOS version, and Apple Watch model when reporting bugs.
-      </p>
-    </div>
-  </section>
-
-</main>
-
-<footer class="site-footer">
-  <div class="footer-row">
-    <div class="footer-brand">
-      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-        <path d="M2 20 Q 8 12, 14 18 T 26 16 T 30 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        <path d="M2 24 Q 8 16, 14 22 T 26 20 T 30 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
-      </svg>
-      <span>DownwindTracker</span>
-    </div>
-    <nav class="footer-nav" aria-label="Legal">
-      <a href="/privacy.html">Privacy</a>
-      <a href="/terms.html">Terms</a>
-      <a href="mailto:support@downwindtracker.com">Support</a>
-    </nav>
   </div>
-  <div class="footer-row footer-fineprint">
-    <span>© <span id="year"></span> DownwindTracker. Apple Watch, watchOS, iOS, App Store, and TestFlight are trademarks of Apple Inc.</span>
+</section>
+
+<section class="block" id="question">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">The after-run question</div>
+      <h2>Every run ends the same way. With a guess.</h2>
+      <p>You come off the water and rate the run by feel: it felt connected, the ocean was good, you think you linked more than last time. Or you open the speed trace and count the spikes by hand. Downwind replaces the guess with a number and a picture.</p>
+    </div>
+    <div class="ledger reveal">
+      <div class="ledger-col feel">
+        <h3>By feel</h3>
+        <div class="feel-line">"Felt really connected out there today."<span class="who">the beach debrief</span></div>
+        <div class="feel-line">"I think I linked more than Tuesday?"<span class="who">the drive home</span></div>
+        <div class="feel-line">"Ocean was generous. Hard to say if it was me."<span class="who">the honest version</span></div>
+      </div>
+      <div class="ledger-col trace">
+        <h3>By trace</h3>
+        <div class="trace-row"><span class="q">Time on bumps</span><span class="a up">55.7% · +4.2 vs baseline</span></div>
+        <div class="trace-row"><span class="q">Rides linked into chains</span><span class="a up">68% · best on this run</span></div>
+        <div class="trace-row"><span class="q">Longest link</span><span class="a">5 rides · 1:48</span></div>
+        <div class="trace-row"><span class="q">Dead water</span><span class="a down">1:26 · two long stalls</span></div>
+        <div class="trace-row"><span class="q">Where you lost the ocean</span><span class="a">min 6:12 and 7:16</span></div>
+      </div>
+    </div>
+    <p class="ledger-note">Both columns describe the same run. Only one of them tells you what to work on next time.</p>
+  </div>
+</section>
+
+<section class="block" id="vocabulary">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="eyebrow">Downwind-native analysis</div>
+      <h2>It speaks the language of the sport.</h2>
+      <p>No pace-per-mile concepts imported from running. Downwind segments every 1 Hz GPS recording deterministically into the units paddlers already think in.</p>
+    </div>
+    <div class="vocab reveal">
+      <div class="vocab-item v-ride">
+        <div class="glyph">
+          <svg width="150" height="48" viewBox="0 0 150 48" fill="none" aria-hidden="true">
+            <path d="M2 40 C14 40 18 38 26 34" stroke="#4A4A52" stroke-width="2" stroke-linecap="round"/>
+            <path d="M26 34 C44 24 58 8 78 8 C98 8 106 22 124 32" stroke="#2DD4BF" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M124 32 C132 36 140 40 148 40" stroke="#4A4A52" stroke-width="2" stroke-linecap="round"/>
+            <rect x="26" y="2" width="98" height="44" rx="4" fill="#2DD4BF" opacity="0.08"/>
+          </svg>
+        </div>
+        <h3>Ride <span class="tag">detected</span></h3>
+        <p>Every bump you catch, found in the trace: when it started, how long you carried it, how fast it peaked. Counted, not remembered.</p>
+      </div>
+      <div class="vocab-item v-link">
+        <div class="glyph">
+          <svg width="150" height="48" viewBox="0 0 150 48" fill="none" aria-hidden="true">
+            <path d="M2 40 C10 28 16 14 26 14 C36 14 38 30 46 30 C50 30 52 26 56 20" stroke="#2DD4BF" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M56 20 C62 12 68 8 76 8 C86 8 88 26 96 28" stroke="#3E9DB2" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M96 28 C102 30 106 20 112 14 C118 8 124 6 132 8 C140 10 144 18 148 24" stroke="#2DD4BF" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="56" cy="20" r="3" fill="#0A0A0B" stroke="#3E9DB2" stroke-width="1.5"/>
+            <circle cx="96" cy="28" r="3" fill="#0A0A0B" stroke="#3E9DB2" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <h3>Link <span class="tag">chained</span></h3>
+        <p>Rides connected into chains. Linking is the skill of downwind, and Downwind measures it directly: chain length, chain frequency, and how both are trending.</p>
+      </div>
+      <div class="vocab-item v-dead">
+        <div class="glyph">
+          <svg width="150" height="48" viewBox="0 0 150 48" fill="none" aria-hidden="true">
+            <path d="M2 24 C12 14 20 10 30 12" stroke="#4A4A52" stroke-width="2" stroke-linecap="round"/>
+            <path d="M30 12 C44 16 50 36 66 38 C84 40 96 38 112 36" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M112 36 C126 32 138 22 148 16" stroke="#4A4A52" stroke-width="2" stroke-linecap="round"/>
+            <rect x="30" y="2" width="82" height="44" rx="4" fill="#F97316" opacity="0.09"/>
+          </svg>
+        </div>
+        <h3>Dead water <span class="tag">flagged</span></h3>
+        <p>The stalls between rides, timed and located. Where you lost the ocean matters as much as where you rode it. That's where the next percent comes from.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="baseline">
+  <div class="wrap">
+    <div class="baseline-grid">
+      <div class="baseline-copy reveal">
+        <div class="eyebrow" style="margin-bottom:18px">Same run, session after session</div>
+        <h2 style="font-family:var(--font-display);font-weight:420;font-size:clamp(28px,3.4vw,40px);line-height:1.14;letter-spacing:-.01em">Separate skill from conditions.</h2>
+        <p>The core ambiguity of downwind progression: was that <strong>you improving</strong>, or was the ocean generous today?</p>
+        <p>Downwind builds a baseline from the runs you repeat. Every session on the same route is measured against your own history there, so the trend that emerges is skill, not swell.</p>
+      </div>
+      <div class="reveal">
+        <div class="route-tabs" role="presentation">
+          <span class="route-tab active">Hawaii Kai</span>
+          <span class="route-tab">Maliko</span>
+          <span class="route-tab">Millers Run</span>
+        </div>
+        <svg id="baselineChart" viewBox="0 0 620 280" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Percent of time on bumps rising across nine sessions on the same route"></svg>
+        <div class="baseline-read"><b>+9.3 pts</b><span>time on bumps vs your Hawaii Kai baseline, last 9 sessions</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="coaching">
+  <div class="wrap">
+    <div class="coach-grid">
+      <div class="coach-copy reveal">
+        <div class="eyebrow" style="margin-bottom:18px">Evidence-gated coaching</div>
+        <h2 style="font-family:var(--font-display);font-weight:420;font-size:clamp(28px,3.4vw,40px);line-height:1.14;letter-spacing:-.01em">Coaching that can't bluff.</h2>
+        <p>Most fitness apps will tell you a story whether or not the data supports one. Downwind's coaching is mechanically forbidden from doing that.</p>
+        <p>On GPS alone it describes <strong>what happened and how it's trending</strong>. Claims about why only unlock when wrist-sensor evidence exists to back them. And when the data is ambiguous, <strong>uncertainty resolves to silence</strong>, not a guess.</p>
+        <p>The result, for a sport riddled with luck and feel: <strong>an improvement it reports is real.</strong> Each session ends with one observable thing to try next run, framed as an experiment, not a diagnosis.</p>
+      </div>
+      <div class="report reveal" aria-label="Example coaching report showing which claims are allowed">
+        <div class="report-head"><span class="dot"></span>Coaching report · Maliko · session 14</div>
+        <div class="report-line says">
+          <span class="badge">Said · GPS evidence</span>
+          <p>You spent <b>55.7% of this run on bumps</b>, up 4.2 points on your Maliko baseline. Your two longest stalls came in the last third; earlier sessions stalled evenly throughout.</p>
+        </div>
+        <div class="report-line withheld">
+          <span class="badge">Withheld · no evidence</span>
+          <p><span class="strike">You were fading late in the run and your catch got lazy.</span></p>
+          <span class="req">requires wrist-sensor evidence · claim not made</span>
+        </div>
+        <div class="report-line unlocked">
+          <span class="badge">Next run · one experiment</span>
+          <p>On the last third, try committing to the <b>first bump after each stall</b> instead of waiting for a bigger one. Watch whether your late-run dead-water total drops below 40 s.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="fit">
+  <div class="wrap">
+    <div class="fit-grid">
+      <div class="fit-col reveal">
+        <h3>The watch you already own.</h3>
+        <p>Garmin FIT files are a first-class input, and Apple Watch recordings work the same way. Any 1 Hz GPS trace is enough for the full core analysis.</p>
+        <ul class="fit-list">
+          <li><span class="m">Input</span><span><b>Garmin FIT · Apple Watch</b> · any 1 Hz GPS recording</span></li>
+          <li><span class="m">Hardware</span><span><b>None to buy.</b> No speed unit, no cadence pod, no mount</span></li>
+          <li><span class="m">Detection</span><span><b>Deterministic</b> ride and dead-water segmentation, same input, same answer</span></li>
+        </ul>
+      </div>
+      <div class="fit-col reveal">
+        <h3>Built for the self-coached improver.</h3>
+        <p>You record every session. You re-run the same route. You're past the survival stage, plateaued, and there's no downwind coach within a thousand miles. This is for you.</p>
+        <ul class="fit-list">
+          <li><span class="m">Craft</span><span><b>OC1 and surfski</b>, downwind foiling on the horizon</span></li>
+          <li><span class="m">Runs</span><span>Hawaii Kai · Maliko · Millers Run · the Gorge · your local run</span></li>
+          <li><span class="m">Racing</span><span>Training toward <b>Gorge, OluKai, Molokai</b>, or the regional series</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block colophon" id="craft">
+  <div class="wrap">
+    <div class="colophon-band reveal">
+      <svg id="colophonSvg" viewBox="0 0 1200 360" preserveAspectRatio="xMidYMid meet" role="img"
+           aria-label="A faceted frigatebird: raw signal flows into its organic left wing and emerges from its wireframe right wing as a segmented speed trace">
+        <path id="sigIn" d="M36.0 155.3 L42.0 154.2 L48.0 157.0 L54.0 161.6 L60.0 164.6 L66.0 163.9 L72.0 161.7 L78.0 160.8 L84.0 162.1 L90.0 163.4 L96.0 162.6 L102.0 160.7 L108.0 160.8 L114.0 164.9 L120.0 171.6 L126.0 177.1 L132.0 179.3 L138.0 179.7 L144.0 180.9 L150.0 183.3 L156.0 184.4 L162.0 182.0 L168.0 176.9 L174.0 172.8 L180.0 172.2 L186.0 174.2 L192.0 175.5 L198.0 174.5 L204.0 172.5 L210.0 172.2 L216.0 173.5 L222.0 173.9 L228.0 170.6 L234.0 164.2 L240.0 158.3 L246.0 155.6 L252.0 155.8 L258.0 156.0 L264.0 154.8 L270.0 154.0 L276.0 156.1 L282.0 161.3 L288.0 166.4" fill="none" stroke="#4A4A52" stroke-width="1.6" stroke-linecap="round"/>
+        <path id="sigOut" d="M628.0 165.4 L634.0 162.7 L640.0 160.7 L646.0 159.4 L652.0 158.8 L658.0 158.7 L664.0 158.8 L670.0 158.8 L676.0 158.6 L682.0 158.2 L688.0 157.3 L694.0 156.3 L700.0 155.2 L706.0 154.4 L712.0 154.2 L718.0 154.6 L724.0 156.0 L730.0 158.2 L736.0 161.3 L742.0 165.0 L748.0 169.0 L754.0 172.9 L760.0 176.5 L766.0 179.4 L772.0 181.4 L778.0 182.6 L784.0 183.0 L790.0 182.7 L796.0 182.0 L802.0 181.1 L808.0 180.4 L814.0 179.9 L820.0 179.7 L826.0 179.9 L832.0 180.2 L838.0 180.4 L844.0 180.2 L850.0 179.5 L856.0 178.1 L862.0 175.9 L868.0 172.9 L874.0 169.3 L880.0 165.5 L886.0 161.6 L892.0 158.1 L898.0 155.3 L904.0 153.3 L910.0 152.3 L916.0 152.3 L922.0 153.1 L928.0 154.5 L934.0 156.1 L940.0 157.7 L946.0 159.2 L952.0 160.3 L958.0 161.0 L964.0 161.4 L970.0 161.8 L976.0 162.2 L982.0 163.0 L988.0 164.4 L994.0 166.4 L1000.0 169.0 L1006.0 172.3 L1012.0 175.8 L1018.0 179.3 L1024.0 182.6 L1030.0 185.1 L1036.0 186.8 L1042.0 187.5 L1048.0 187.1 L1054.0 185.9 L1060.0 183.9 L1066.0 181.5 L1072.0 179.0 L1078.0 176.7 L1084.0 174.8 L1090.0 173.3 L1096.0 172.2 L1102.0 171.5 L1108.0 170.9 L1114.0 170.1 L1120.0 169.0 L1126.0 167.4 L1132.0 165.2 L1138.0 162.5 L1144.0 159.6 L1150.0 156.6 L1156.0 153.8 L1162.0 151.7" fill="none" stroke="#2DD4BF" stroke-width="2" stroke-linecap="round"/>
+        <g id="sigTicks">
+          <line x1="658.0" y1="150.7" x2="658.0" y2="142.7" stroke="#2DD4BF" stroke-opacity="0.55" stroke-width="1.4"/><line x1="712.0" y1="146.2" x2="712.0" y2="138.2" stroke="#2DD4BF" stroke-opacity="0.55" stroke-width="1.4"/><line x1="820.0" y1="171.7" x2="820.0" y2="163.7" stroke="#2DD4BF" stroke-opacity="0.55" stroke-width="1.4"/><line x1="916.0" y1="144.3" x2="916.0" y2="136.3" stroke="#2DD4BF" stroke-opacity="0.55" stroke-width="1.4"/>
+        </g>
+<g transform="translate(285.8 26.0) scale(0.62)">
+  <g id="birdOrganic">
+    <path d="M281.01 160.87V98.19L270.54 151.51L281.01 160.87Z" fill="#FCBD18"/>
+    <path d="M281.01 160.87L257.07 186.05L270.54 151.51L281.01 160.87Z" fill="#EF9821"/>
+    <path d="M281.01 160.87V230.22L257.07 186.05L281.01 160.87Z" fill="#FAAE18"/>
+    <path d="M257.07 186.05L234.11 199.81L281.01 230.22L257.07 186.05Z" fill="#EC9622"/>
+    <path d="M281.01 230.22L257.57 271.4L234.11 199.81L281.01 230.22Z" fill="#FDB822"/>
+    <path d="M234.1 199.81L205.72 217.08L257.56 271.4L234.1 199.81Z" fill="#06517F"/>
+    <path d="M205.73 217.08L212.04 269.76L257.57 271.39L205.73 217.07V217.08Z" fill="#0D3B5E"/>
+    <path d="M205.73 217.08L164.38 151.51L234.11 199.81L205.73 217.08Z" fill="#0A446B"/>
+    <path d="M164.38 151.51L122.6 187.04L205.73 217.07L164.38 151.5V151.51Z" fill="#0C395B"/>
+    <path d="M205.73 217.08L160.75 249.64L212.04 269.76L205.73 217.08Z" fill="#0C3151"/>
+    <path d="M205.73 217.08L127.02 237.79L160.75 249.64L205.73 217.08Z" fill="#0B3D5F"/>
+    <path d="M122.6 187.05L69.4 232.25L127.02 237.79L205.73 217.08L122.6 187.05Z" fill="#0C3151"/>
+    <path d="M164.38 151.51L67.3 192.31L122.6 187.05L164.38 151.52V151.51Z" fill="#07466D"/>
+    <path d="M67.3 192.31L10.16 230.72L69.4 232.25L122.6 187.05L67.3 192.31Z" fill="#0D3B5E"/>
+    <path d="M281.01 230.22V311.04L257.57 271.39L281.01 230.21V230.22Z" fill="#F49C1E"/>
+    <path d="M257.57 271.39L260.99 289.81V294.26L281.01 311.03L257.57 271.38V271.39Z" fill="#D97F27"/>
+    <path d="M260.99 294.27L255.69 351.3L281.01 311.04L260.99 294.27Z" fill="#F1AB25"/>
+    <path d="M281.01 311.04L271.88 383.55L255.7 351.3L281.02 311.04H281.01Z" fill="#075380"/>
+    <path d="M271.88 383.55L263.14 463.82L255.69 351.3L271.87 383.55H271.88Z" fill="#044970"/>
+  </g>
+  <g id="birdWire" fill="none" stroke="#2DD4BF" stroke-opacity="0.34" stroke-width="1.4" stroke-linejoin="round">
+    <path d="M281.01 160.87V98.19L291.47 151.51L281.01 160.87Z"/>
+    <path d="M281.01 160.87L304.93 186.05L291.46 151.51L281 160.87H281.01Z"/>
+    <path d="M281.01 160.87V230.22L304.93 186.05L281.01 160.87Z"/>
+    <path d="M304.93 186.05L327.89 199.81L281 230.22L304.92 186.05H304.93Z"/>
+    <path d="M281.01 230.22L304.45 271.4L327.89 199.81L281 230.22H281.01Z"/>
+    <path d="M327.89 199.81L356.27 217.08L304.45 271.4L327.89 199.81Z"/>
+    <path d="M356.27 217.08L349.96 269.76L304.45 271.39L356.27 217.07V217.08Z"/>
+    <path d="M356.27 217.08L397.62 151.51L327.89 199.81L356.27 217.08Z"/>
+    <path d="M397.62 151.51L439.4 187.04L356.27 217.07L397.62 151.5V151.51Z"/>
+    <path d="M356.27 217.08L401.25 249.64L349.96 269.76L356.27 217.08Z"/>
+    <path d="M356.27 217.08L434.98 237.79L401.25 249.64L356.27 217.08Z"/>
+    <path d="M439.4 187.05L492.6 232.25L434.98 237.79L356.27 217.08L439.4 187.05Z"/>
+    <path d="M397.62 151.51L494.71 192.31L439.4 187.05L397.62 151.52V151.51Z"/>
+    <path d="M494.71 192.31L551.85 230.72L492.6 232.25L439.4 187.05L494.71 192.31Z"/>
+    <path d="M281.01 230.22V311.04L304.45 271.39L281.01 230.21V230.22Z"/>
+    <path d="M304.45 271.39L301.01 289.81V294.26L281.01 311.03L304.45 271.38V271.39Z"/>
+    <path d="M301.01 294.27L306.32 351.3L281 311.04L301 294.27H301.01Z"/>
+    <path d="M281.01 311.04L290.13 383.55L306.33 351.3L281.01 311.04Z"/>
+    <path d="M290.12 383.55L298.86 463.82L306.32 351.3L290.12 383.55Z"/>
+  </g>
+</g>
+      </svg>
+      <p class="colophon-caption">A frigatebird reads the energy on the ocean's surface. Downwind reads it in your trace.</p>
+    </div>
+  </div>
+</section>
+
+<section class="closing" id="beta">
+  <div class="wrap" style="position:relative;z-index:1">
+    <div class="eyebrow reveal">Like Strava, but it understands downwind</div>
+    <h2 class="reveal">The training-analysis app for <em>downwind</em> paddling.</h2>
+    <p class="reveal">After every run you'll know whether you rode more of the ocean than last time, and what to try next. Downwind is in TestFlight beta now.</p>
+    <div class="hero-actions reveal">
+      <a class="btn btn-primary" href="mailto:support@downwindtracker.com?subject=Downwind%20beta%20access">Request beta access</a>
+      <a class="btn btn-ghost" href="#analysis">See a run analyzed</a>
+    </div>
+  </div>
+  <div class="closing-trace" aria-hidden="true">
+    <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+      <path id="closingPath" fill="none" stroke="#2DD4BF" stroke-width="1.5" opacity="0.5"></path>
+      <path id="closingFill" fill="rgba(45,212,191,0.05)" stroke="none"></path>
+    </svg>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-inner">
+    <span class="copy" style="display:inline-flex;align-items:center;gap:10px"><img src="/logo.svg" width="20" height="20" alt="" style="display:block" />© 2026 Downwind · Made for the ocean, on the ocean's data</span>
+    <div class="foot-links">
+      <a href="privacy.html">Privacy</a>
+      <a href="terms.html">Terms</a>
+      <a href="mailto:support@downwindtracker.com">Support</a>
+    </div>
   </div>
 </footer>
 
 <script>
-  document.getElementById('year').textContent = new Date().getFullYear();
-</script>
+(function(){
+  "use strict";
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  /* ---------------- data: a hand-authored 10-minute excerpt ---------------- */
+  var DUR = 600, DT = 2;
+  var rides = [
+    [16,38],[44,60],[64,86],[90,108],
+    [126,148],[152,166],
+    [198,214],
+    [228,260],[264,282],[286,298],[302,316],[320,336],
+    [354,370],
+    [400,418],[422,434],
+    [466,484],
+    [510,532],[536,550],[554,568]
+  ];
+  var ridePeak = [4.2,3.4,5.0,3.8, 4.6,3.2, 3.0, 5.6,4.4,3.6,4.0,3.4, 3.2, 4.8,3.4, 4.2, 5.2,4.0,3.6];
+  var deads = [[168,186],[338,352],[372,398],[436,464]];
+
+  function speedAt(t){
+    var s = 5.6
+      + 0.5*Math.sin(t*0.021)
+      + 0.35*Math.sin(t*0.043+1.7)
+      + 0.22*Math.sin(t*0.11+0.5)
+      + 0.12*Math.sin(t*0.31+2.1);
+    var i, r, f;
+    for(i=0;i<rides.length;i++){
+      r = rides[i];
+      if(t>=r[0] && t<=r[1]){
+        f = Math.sin(Math.PI*(t-r[0])/(r[1]-r[0]));
+        s += ridePeak[i]*Math.pow(f,1.25);
+      }
+    }
+    for(i=0;i<deads.length;i++){
+      r = deads[i];
+      if(t>=r[0] && t<=r[1]){
+        f = Math.sin(Math.PI*(t-r[0])/(r[1]-r[0]));
+        s -= 1.35*f;
+      }
+    }
+    return s;
+  }
+
+  /* ---------------- hero trace chart ---------------- */
+  var svg = document.getElementById("trace");
+  var NS = "http://www.w3.org/2000/svg";
+  var W = 1180, H = 320, padL = 44, padR = 8, padT = 40, padB = 34;
+  var plotW = W - padL - padR, plotH = H - padT - padB;
+  var vMin = 3, vMax = 12;
+
+  function X(t){ return padL + (t/DUR)*plotW; }
+  function Y(v){ return padT + (1 - (v-vMin)/(vMax-vMin))*plotH; }
+
+  function el(name, attrs, parent){
+    var e = document.createElementNS(NS, name), k;
+    for(k in attrs) e.setAttribute(k, attrs[k]);
+    (parent||svg).appendChild(e);
+    return e;
+  }
+
+  function pathFor(t0, t1){
+    var d = "", t, first = true;
+    for(t=t0; t<=t1; t+=DT){
+      d += (first ? "M" : "L") + X(t).toFixed(1) + " " + Y(speedAt(t)).toFixed(1) + " ";
+      first = false;
+    }
+    return d;
+  }
+
+  /* grid + axis */
+  var gGrid = el("g", {});
+  [4,6,8,10,12].forEach(function(v){
+    el("line", {x1:padL, y1:Y(v), x2:W-padR, y2:Y(v), stroke:"#1E1E21", "stroke-width":1}, gGrid);
+    el("text", {x:padL-10, y:Y(v)+4, "text-anchor":"end", "font-size":"10.5", fill:"#71717A"}, gGrid).textContent = v;
+  });
+  el("text", {x:padL-10, y:padT-16, "text-anchor":"end", "font-size":"10.5", fill:"#52525B"}, gGrid).textContent = "mph";
+  [0,120,240,360,480,600].forEach(function(t){
+    el("text", {x:X(t), y:H-10, "text-anchor":"middle", "font-size":"10.5", fill:"#52525B"}, gGrid).textContent =
+      Math.floor(t/60) + ":" + ("0"+(t%60)).slice(-2);
+  });
+
+  /* dead-water bands (hidden until phase 3) */
+  var gDead = el("g", {opacity: reduced ? 1 : 0});
+  deads.forEach(function(d){
+    el("rect", {x:X(d[0]), y:padT, width:X(d[1])-X(d[0]), height:plotH, fill:"#F97316", opacity:0.10}, gDead);
+    el("line", {x1:X(d[0]), y1:padT, x2:X(d[0]), y2:padT+plotH, stroke:"#F97316", "stroke-width":1, opacity:0.35}, gDead);
+    el("line", {x1:X(d[1]), y1:padT, x2:X(d[1]), y2:padT+plotH, stroke:"#F97316", "stroke-width":1, opacity:0.35}, gDead);
+  });
+
+  /* ride bands (hidden until phase 2) */
+  var gBands = el("g", {opacity: reduced ? 1 : 0});
+  rides.forEach(function(r){
+    el("rect", {x:X(r[0]), y:padT, width:X(r[1])-X(r[0]), height:plotH, fill:"#2DD4BF", opacity:0.07}, gBands);
+  });
+
+  /* raw line */
+  var raw = el("path", {d: pathFor(0, DUR), fill:"none", stroke:"#4A4A52", "stroke-width":1.6,
+    "stroke-linecap":"round", "stroke-linejoin":"round"});
+
+  /* teal ride sub-paths over the raw line */
+  var gRide = el("g", {opacity: reduced ? 1 : 0});
+  rides.forEach(function(r){
+    el("path", {d: pathFor(r[0], r[1]), fill:"none", stroke:"#2DD4BF", "stroke-width":2.2,
+      "stroke-linecap":"round", "stroke-linejoin":"round"}, gRide);
+  });
+
+  /* orange dead sub-paths */
+  var gDeadLine = el("g", {opacity: reduced ? 1 : 0});
+  deads.forEach(function(d){
+    el("path", {d: pathFor(d[0], d[1]), fill:"none", stroke:"#F97316", "stroke-width":2,
+      "stroke-linecap":"round", "stroke-linejoin":"round", opacity:0.85}, gDeadLine);
+  });
+
+  /* annotations */
+  var gAnn = el("g", {opacity: reduced ? 1 : 0});
+  function annotate(t, v, label, color, dy){
+    var x = X(t), y = Y(v);
+    el("line", {x1:x, y1:y-6, x2:x, y2:y-dy+14, stroke:color, "stroke-width":1, opacity:0.5}, gAnn);
+    el("text", {x:x, y:y-dy, "text-anchor":"middle", "font-size":"10.5", fill:color, "letter-spacing":"0.06em"}, gAnn)
+      .textContent = label;
+  }
+  annotate(75, speedAt(75)+0.3, "ride · 22 s · 10.4 mph", "#2DD4BF", 26);
+  annotate(282, 11.6, "linked ×5 · 1:48 riding", "#2DD4BF", 8);
+  el("line", {x1:X(228), y1:padT+6, x2:X(336), y2:padT+6, stroke:"#2DD4BF", "stroke-width":1.5, opacity:0.6}, gAnn);
+  el("line", {x1:X(228), y1:padT+2, x2:X(228), y2:padT+10, stroke:"#2DD4BF", "stroke-width":1.5, opacity:0.6}, gAnn);
+  el("line", {x1:X(336), y1:padT+2, x2:X(336), y2:padT+10, stroke:"#2DD4BF", "stroke-width":1.5, opacity:0.6}, gAnn);
+  var dwMid = (372+398)/2;
+  annotate(dwMid, speedAt(dwMid)-0.2, "", "#F97316", 0);
+  el("text", {x:X(dwMid), y:Y(speedAt(dwMid))+26, "text-anchor":"middle", "font-size":"10.5",
+    fill:"#F97316", "letter-spacing":"0.06em"}, gAnn).textContent = "dead water · 26 s";
+
+  /* ---------------- animation timeline ---------------- */
+  function fade(node, dur, delay){
+    node.style.transition = "opacity " + dur + "ms ease " + delay + "ms";
+    requestAnimationFrame(function(){ node.setAttribute("opacity", 1); node.style.opacity = 1; });
+  }
+  function countUp(span, target, decimals, dur){
+    var start = null;
+    function step(ts){
+      if(!start) start = ts;
+      var p = Math.min((ts-start)/dur, 1);
+      var eased = 1 - Math.pow(1-p, 3);
+      span.textContent = (target*eased).toFixed(decimals);
+      if(p<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  function clockUp(spanEl, totalSec, dur){
+    var start = null;
+    function fmt(s){ return Math.floor(s/60) + ":" + ("0"+Math.round(s%60)).slice(-2); }
+    function step(ts){
+      if(!start) start = ts;
+      var p = Math.min((ts-start)/dur, 1);
+      var eased = 1 - Math.pow(1-p, 3);
+      spanEl.textContent = fmt(totalSec*eased);
+      if(p<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  var counters = document.querySelectorAll("[data-count]");
+  var deadClock = document.getElementById("deadClock");
+
+  function runStats(){
+    if(reduced){
+      counters.forEach(function(c){ c.textContent = parseFloat(c.dataset.count).toFixed(+c.dataset.decimals); });
+      deadClock.textContent = "1:26";
+      return;
+    }
+    counters.forEach(function(c){ countUp(c, parseFloat(c.dataset.count), +c.dataset.decimals, 1400); });
+    clockUp(deadClock, 86, 1400);
+  }
+
+  var played = false;
+  function playHero(){
+    if(played) return;
+    played = true;
+    if(reduced){ runStats(); return; }
+    var len = raw.getTotalLength();
+    raw.style.strokeDasharray = len;
+    raw.style.strokeDashoffset = len;
+    raw.style.transition = "stroke-dashoffset 1600ms ease-out";
+    requestAnimationFrame(function(){ raw.style.strokeDashoffset = 0; });
+    setTimeout(function(){ fade(gBands, 600, 0); fade(gRide, 700, 120); }, 1300);
+    setTimeout(function(){ fade(gDead, 600, 0); fade(gDeadLine, 600, 100); }, 2000);
+    setTimeout(function(){ fade(gAnn, 700, 0); runStats(); }, 2500);
+  }
+
+  var traceIO = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if(e.isIntersecting){ playHero(); traceIO.disconnect(); } });
+  }, {threshold: 0.35});
+  traceIO.observe(svg);
+
+  /* ---------------- baseline chart ---------------- */
+  (function(){
+    var b = document.getElementById("baselineChart");
+    var bW = 620, bH = 280, pL = 40, pR = 10, pT = 24, pB = 40;
+    var pw = bW-pL-pR, ph = bH-pT-pB;
+    var vals = [38,41,37,44,43,47,45,49,53];
+    var lo = 30, hi = 60;
+    function bx(i){ return pL + (i+0.5)*(pw/vals.length); }
+    function by(v){ return pT + (1-(v-lo)/(hi-lo))*ph; }
+    function bel(name, attrs){ var e=document.createElementNS(NS,name); for(var k in attrs) e.setAttribute(k,attrs[k]); b.appendChild(e); return e; }
+
+    [35,45,55].forEach(function(v){
+      bel("line",{x1:pL,y1:by(v),x2:bW-pR,y2:by(v),stroke:"#1E1E21","stroke-width":1});
+      bel("text",{x:pL-8,y:by(v)+4,"text-anchor":"end","font-size":"10.5",fill:"#71717A"}).textContent = v+"%";
+    });
+    /* baseline median dashed */
+    var med = 43;
+    bel("line",{x1:pL,y1:by(med),x2:bW-pR,y2:by(med),stroke:"#71717A","stroke-width":1,"stroke-dasharray":"4 5",opacity:0.7});
+    bel("text",{x:bW-pR,y:by(med)-7,"text-anchor":"end","font-size":"10",fill:"#71717A","letter-spacing":"0.08em"}).textContent = "your baseline";
+
+    var barW = Math.min(34, pw/vals.length - 14);
+    vals.forEach(function(v,i){
+      var last = i === vals.length-1;
+      bel("rect",{
+        x:bx(i)-barW/2, y:by(v), width:barW, height:pT+ph-by(v), rx:3,
+        fill: last ? "#2DD4BF" : "rgba(43,122,140,0.55)"
+      });
+      bel("text",{x:bx(i),y:bH-22,"text-anchor":"middle","font-size":"10",fill:"#52525B"}).textContent = "s"+(i+1);
+      if(last || i===0){
+        bel("text",{x:bx(i),y:by(v)-8,"text-anchor":"middle","font-size":"11",
+          fill: last ? "#2DD4BF" : "#A1A1AA","font-weight":"500"}).textContent = v+"%";
+      }
+    });
+    bel("text",{x:pL,y:bH-6,"font-size":"10",fill:"#52525B","letter-spacing":"0.08em"}).textContent = "time on bumps · same route · last 9 sessions";
+  })();
+
+  /* ---------------- closing ambient trace ---------------- */
+  (function(){
+    var p = document.getElementById("closingPath");
+    var f = document.getElementById("closingFill");
+    if(!p) return;
+    var d = "", t;
+    for(t=0;t<=1440;t+=8){
+      var y = 70 - 26*Math.sin(t*0.008) - 14*Math.sin(t*0.021+1.4) - 8*Math.sin(t*0.05+0.6);
+      d += (t===0?"M":"L") + t + " " + y.toFixed(1) + " ";
+    }
+    p.setAttribute("d", d);
+    f.setAttribute("d", d + "L1440 120 L0 120 Z");
+  })();
+
+  /* ---------------- colophon: signal draws through the bird ---------------- */
+  (function(){
+    var c = document.getElementById("colophonSvg");
+    if(!c) return;
+    var sin = document.getElementById("sigIn");
+    var sout = document.getElementById("sigOut");
+    var ticks = document.getElementById("sigTicks");
+    var wire = document.getElementById("birdWire");
+    if(reduced) return;
+    [sin, sout].forEach(function(p){
+      var L = p.getTotalLength();
+      p.style.strokeDasharray = L; p.style.strokeDashoffset = L;
+    });
+    ticks.style.opacity = 0; wire.style.opacity = 0;
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if(!e.isIntersecting) return;
+        io.disconnect();
+        sin.style.transition = "stroke-dashoffset 1100ms ease-in";
+        requestAnimationFrame(function(){ sin.style.strokeDashoffset = 0; });
+        setTimeout(function(){
+          wire.style.transition = "opacity 700ms ease";
+          wire.style.opacity = 1;
+        }, 900);
+        setTimeout(function(){
+          sout.style.transition = "stroke-dashoffset 1300ms ease-out";
+          sout.style.strokeDashoffset = 0;
+          ticks.style.transition = "opacity 600ms ease 900ms";
+          ticks.style.opacity = 1;
+        }, 1400);
+      });
+    }, {threshold: 0.45});
+    io.observe(c);
+  })();
+
+  /* ---------------- scroll reveals ---------------- */
+  var revealIO = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){ e.target.classList.add("in"); revealIO.unobserve(e.target); }
+    });
+  }, {threshold: 0.14});
+  document.querySelectorAll(".reveal").forEach(function(n){ revealIO.observe(n); });
+})();
+</script>
 </body>
 </html>

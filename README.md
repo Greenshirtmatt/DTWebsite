@@ -6,19 +6,22 @@ Single-page marketing and compliance site for the DownwindTracker iOS + watchOS 
 
 Pure static HTML + CSS. No build step, no JavaScript framework, no dependencies. Designed to drop straight onto Netlify (drag-and-drop or Git deploy).
 
+The landing page (`index.html`) is **self-contained** — its styles live in an inline `<style>` block and it carries its own small progressive-enhancement `<script>`. The shared `styles.css` now covers **only** the legal/utility pages (`privacy.html`, `terms.html`, `404.html`), which link to it via `/styles.css`.
+
 ## File layout
 
 ```
 .
-├── index.html        # Landing page
-├── privacy.html      # Privacy Policy
-├── terms.html        # Terms of Use / EULA
-├── 404.html          # Not-found page
-├── styles.css        # All styles (Wind Tracer dark theme)
+├── index.html        # Landing page (inline styles + inline script, self-contained)
+├── privacy.html      # Privacy Policy       → links /styles.css
+├── terms.html        # Terms of Use / EULA  → links /styles.css
+├── 404.html          # Not-found page       → links /styles.css
+├── styles.css        # Shared styles for the legal/utility pages only
+├── logo.svg          # App logo (used in the hero)
 ├── favicon.svg       # SVG favicon
 ├── robots.txt
 ├── sitemap.xml
-└── netlify.toml      # Netlify config (redirects, headers, caching)
+└── netlify.toml      # Netlify config (404 fallback, security headers, caching)
 ```
 
 ## Deploying to Netlify (drag-and-drop, no Git yet)
@@ -30,23 +33,24 @@ Pure static HTML + CSS. No build step, no JavaScript framework, no dependencies.
 
 ## Deploying to Netlify via GitHub (recommended for future updates)
 
-1. Create a new GitHub repo and push these files.
+1. Push this repo to GitHub.
 2. In Netlify: **Add new site → Import from Git → GitHub**, pick the repo.
 3. Build settings: leave **Build command** blank, set **Publish directory** to `.` (the repo root). The `netlify.toml` already declares this.
 4. Connect the custom domain as above.
 
 ## Design notes
 
-- Colors and typography match the in-app Wind Tracer design tokens defined in `DesignTokens.swift` (`#0A0A0B` base, `#2B7A8C` teal, `#F59E0B` amber, etc).
+- Colors and typography match the in-app Wind Tracer design tokens. Core palette: `#0A0A0B` base, `#2B7A8C` teal (`--teal-bright #3E9DB2`), `#2DD4BF` "ride" accent, `#F97316` "dead water" accent, `#FAFAFA` text.
 - Display type: Fraunces (Google Fonts).
 - Body type: Inter Tight (Google Fonts).
 - Mono type: JetBrains Mono (Google Fonts).
+- Fonts are loaded from `fonts.googleapis.com` / `fonts.gstatic.com` (the one external dependency). `index.html` `preconnect`s to both.
 
 ## App Store / TestFlight compliance checklist
 
 When you submit to TestFlight or the App Store, point Apple to:
 
-- **Support URL** → `https://www.downwindtracker.com/` (or directly to `#support` anchor)
+- **Support URL** → `https://www.downwindtracker.com/` (support is handled via the `mailto:support@downwindtracker.com` links / `#beta` section)
 - **Marketing URL** → `https://www.downwindtracker.com/`
 - **Privacy Policy URL** → `https://www.downwindtracker.com/privacy.html`
 - **EULA URL (optional)** → `https://www.downwindtracker.com/terms.html`
@@ -55,9 +59,9 @@ You will still need to fill in the App Privacy questionnaire in App Store Connec
 
 ## Things to update before launch
 
-- `privacy.html` and `terms.html` carry a placeholder `Last updated: May 15, 2026` and a publisher-jurisdiction blank in the Terms governing-law clause. Fill these in with your actual jurisdiction and have the Terms reviewed by counsel before public App Store launch.
-- The hero block says "TestFlight beta, App Store launch in progress" and the CTA button is disabled. When you go live, change the CTA in `index.html` to a real App Store badge / URL and update the status pill text.
-- Replace the placeholder `<em>These Terms are a starting template...</em>` note in `terms.html` once you have final reviewed copy.
+- `privacy.html` and `terms.html` carry `Last updated: July 23, 2026`. Bump these whenever the policies change.
+- `terms.html` Section 12 (Governing law) uses a generic clause; replace with your actual jurisdiction and have the Terms reviewed by counsel before public App Store launch.
+- The site is in **TestFlight beta** mode: the hero status pill reads "TestFlight beta · Garmin FIT · Apple Watch" and CTAs point to `#beta` / `mailto:support@downwindtracker.com`. When you go live, swap the CTAs in `index.html` for a real App Store badge / URL and update the status pill and beta copy.
 
 ## License
 
