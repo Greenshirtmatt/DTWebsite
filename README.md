@@ -27,6 +27,14 @@ The landing page (`index.html`) is **self-contained** — its styles live in an 
 └── netlify.toml      # Netlify config (404 fallback, security headers, caching)
 ```
 
+## Web app subdomain (not hosted here)
+
+`https://app.downwindtracker.com` is the signed-in web app. It runs on Fly.io (app `downwind-web-prod`, code in the `paddle_code` repo), not on Netlify. The "Sign in" links in the `index.html` nav and footer point to it.
+
+- DNS lives in Namecheap: the `app` **A** and **AAAA** records point at Fly's IPs for `downwind-web-prod`. Leave them alone when you change the apex/`www` Netlify records.
+- Don't add `app.downwindtracker.com` as a Netlify domain; Fly issues its certificate.
+- The `Strict-Transport-Security … includeSubDomains` header in `netlify.toml` also covers `app.`, which is fine because Fly forces HTTPS.
+
 ## Deploying to Netlify (drag-and-drop, no Git yet)
 
 1. Zip the contents of this folder (not the folder itself, the contents).
