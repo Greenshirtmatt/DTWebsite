@@ -89,7 +89,10 @@ nav{
 .nav-links a{font-size:13.5px;color:var(--text-2);transition:color .15s}
 .nav-links a:hover{color:var(--text-1)}
 .nav-cta{margin-left:8px}
-@media(max-width:760px){.nav-links{display:none}}
+.nav-signin{font-size:13.5px;color:var(--text-2);transition:color .15s}
+.nav-signin:hover{color:var(--text-1)}
+.nav-signin + .nav-cta{margin-left:-12px}
+@media(max-width:760px){.nav-links{display:none}.nav-signin{margin-left:auto}}
 
 /* ---------- hero ---------- */
 .hero{padding:96px 0 40px;position:relative}
@@ -342,6 +345,7 @@ footer{border-top:1px solid var(--border-subtle);padding:34px 0}
       <a href="#fit">Who it's for</a>
       <a href="/blog/">The Bump Log</a>
     </div>
+    <a class="nav-signin" href="https://app.downwindtracker.com">Sign in</a>
     <a class="btn btn-primary nav-cta" href="#beta">Join the beta</a>
   </div>
 </nav>
@@ -633,6 +637,7 @@ footer{border-top:1px solid var(--border-subtle);padding:34px 0}
     <span class="copy" style="display:inline-flex;align-items:center;gap:10px"><img src="/logo.svg" width="20" height="20" alt="" style="display:block" />© 2026 Downwind · Made for the ocean, on the ocean's data</span>
     <div class="foot-links">
       <a href="/blog/">The Bump Log</a>
+      <a href="https://app.downwindtracker.com">Sign in</a>
       <a href="privacy.html">Privacy</a>
       <a href="terms.html">Terms</a>
       <a href="mailto:support@downwindtracker.com">Support</a>
