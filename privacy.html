@@ -41,9 +41,9 @@
     <strong>Plain summary:</strong> When you start a paddle session, the Apple
     Watch records GPS and motion sensor data. You sign in with your email to
     upload it for analysis, and the sessions and results are stored with your
-    account. To write your coaching report, we send your session metrics, your
-    notes about the session, and your profile record (including your email
-    address) to an AI provider (OpenAI or Anthropic).
+    account. To write your coaching report, we send your session metrics and
+    your notes about the session to an AI provider (OpenAI or Anthropic), but
+    not your email address.
     Heart rate and energy from Apple Health stay on your devices and in Health;
     we don't upload them. We don't sell your data, run ads, or put analytics or
     tracking SDKs in the app or the web app.
@@ -159,10 +159,10 @@
       bumps, dead-water sections, stroke and heart-rate figures where
       available), its start time, comparisons with your earlier sessions, what
       you entered about the session (session type, focus, conditions, and your
-      notes), and your profile record, which includes your email address and
-      baseline speed. We don't send your GPS track or raw sensor files.
+      notes), and your craft type and baseline speed. We don't send your email
+      address, your account ID, your GPS track, or raw sensor files.
     </li>
-    <li><strong>Sentry (Functional Software, Inc.)</strong> · Error reports from our backend. A report includes the error details, the request path and method, and your account ID. It doesn't include what you uploaded or typed, your sign-in tokens, or your email address.</li>
+    <li><strong>Sentry (Functional Software, Inc.)</strong> · Error reports from our backend. A report includes the error details, the request path and method, and your account and session IDs. It doesn't include your IP address, what you uploaded or typed, your sign-in tokens, or your email address.</li>
     <li><strong>Esri</strong> · Map images in the web app. Your browser loads them from Esri's servers, so Esri sees your IP address and the map area you're viewing.</li>
     <li><strong>Google Fonts</strong> · Fonts for this website and the web app. Your browser loads them from Google, so Google sees your IP address.</li>
     <li><strong>Apple Inc.</strong> · App Store and TestFlight distribution, Apple Health on your devices, and crash reports if you've turned them on.</li>
