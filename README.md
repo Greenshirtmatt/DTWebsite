@@ -66,11 +66,11 @@ When you submit to TestFlight or the App Store, point Apple to:
 - **Privacy Policy URL** → `https://www.downwindtracker.com/privacy.html`
 - **EULA URL (optional)** → `https://www.downwindtracker.com/terms.html`
 
-You will still need to fill in the App Privacy questionnaire in App Store Connect. The Privacy Policy on this site is written to reflect what the project knowledge shows the app actually collects (email via Supabase, location, motion, HealthKit workout, basic session metadata). Mirror these in App Store Connect or Apple will reject the build.
+You will still need to fill in the App Privacy questionnaire in App Store Connect. The Privacy Policy on this site is written to reflect what the project knowledge shows the app actually collects (email via Supabase; location; accelerometer and device motion; HealthKit heart rate, energy, and saved workouts; uploaded FIT/CSV files; session details and notes; AI coaching via OpenAI or Anthropic; backend error reports via Sentry). Mirror these in App Store Connect or Apple will reject the build.
 
 ## Things to update before launch
 
-- `privacy.html` and `terms.html` carry `Last updated: July 23, 2026`. Bump these whenever the policies change.
+- `privacy.html` carries `Last updated: November 9, 2026` and `terms.html` carries `Last updated: July 23, 2026`. Bump these whenever the policies change.
 - `terms.html` Section 12 (Governing law) uses a generic clause; replace with your actual jurisdiction and have the Terms reviewed by counsel before public App Store launch.
 - The site is in **TestFlight beta** mode: the hero status pill reads "TestFlight beta · Garmin FIT · Apple Watch" and CTAs point to `#beta` / `mailto:support@downwindtracker.com`. When you go live, swap the CTAs in `index.html` for a real App Store badge / URL and update the status pill and beta copy.
 

@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Privacy Policy · Downwind</title>
-<meta name="description" content="Privacy Policy for the DownwindTracker iOS and watchOS app and the Downwind Cloud backend." />
+<meta name="description" content="Privacy Policy for Downwind: the DownwindTracker iPhone and Apple Watch app, the web app, and the Downwind Cloud backend." />
 <meta name="theme-color" content="#0A0A0B" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -27,27 +27,29 @@
   <a class="back-link" href="/">← Back to home</a>
 
   <h1>Privacy Policy</h1>
-  <p class="updated">Last updated: July 23, 2026</p>
+  <p class="updated">Last updated: November 9, 2026</p>
 
   <p>
-    This policy describes how the DownwindTracker iOS and watchOS app
-    ("DownwindTracker", "the app", "we") collects, uses, stores, and
-    transfers personal data. This policy applies only to the DownwindTracker app
-    and the Downwind Cloud backend service operated by the same publisher.
+    This policy covers Downwind: the DownwindTracker iPhone and Apple Watch
+    app, the web app at
+    <a href="https://app.downwindtracker.com">app.downwindtracker.com</a>, and
+    the Downwind Cloud backend behind both ("Downwind", "we"). The app and the
+    web app use the same account and the same data.
   </p>
 
   <p>
-    <strong>Plain summary:</strong> The app records sensor data (motion and GPS)
-    from your Apple Watch when you start a paddle session. To upload that data
-    for analysis, the app asks you to sign in with your email. Your sensor data
-    and the analysis results are stored on our backend and are tied to your
-    account. We do not sell your data, we do not run advertising, and we do not
-    use third-party analytics or tracking SDKs inside the app.
+    <strong>Plain summary:</strong> When you start a paddle session, the Apple
+    Watch records GPS and motion sensor data. You sign in with your email to
+    upload it for analysis, and the sessions and results are stored with your
+    account. To write your coaching report, we send your session metrics, your
+    notes about the session, and your profile record (including your email
+    address) to an AI provider (OpenAI or Anthropic).
+    Heart rate and energy from Apple Health stay on your devices and in Health;
+    we don't upload them. We don't sell your data, run ads, or put analytics or
+    tracking SDKs in the app or the web app.
   </p>
 
   <h2>1. Data we collect</h2>
-
-  <p>The app collects the following categories of data:</p>
 
   <table>
     <thead>
@@ -60,146 +62,167 @@
     <tbody>
       <tr>
         <td>Account</td>
-        <td>Email address (used by Supabase magic-link authentication) and a Supabase user identifier (UUID).</td>
-        <td>When you sign in.</td>
+        <td>Your email address (for magic-link sign-in) and an account ID (UUID). We also keep a baseline paddling speed worked out from your sessions.</td>
+        <td>When you sign in and when sessions are analyzed.</td>
       </tr>
       <tr>
         <td>Location</td>
-        <td>GPS coordinates, altitude, speed, course, and per-sample accuracy values from Core Location, recorded approximately once per second.</td>
-        <td>Only while a paddle session is actively recording on the watch.</td>
+        <td>GPS position, altitude, speed, course, and accuracy values, about once per second.</td>
+        <td>Only while a session is recording on the watch.</td>
       </tr>
       <tr>
-        <td>Motion / sensor</td>
-        <td>Three-axis accelerometer readings from Core Motion at approximately 100 Hz.</td>
-        <td>Only while a paddle session is actively recording on the watch.</td>
+        <td>Motion</td>
+        <td>Accelerometer readings at about 100 per second, plus device-motion data at about 100 per second: rotation rate (gyroscope), acceleration with gravity removed, and watch orientation. We use these to detect strokes and pieces. The app doesn't use the compass.</td>
+        <td>Only while a session is recording on the watch.</td>
       </tr>
       <tr>
-        <td>Health / fitness</td>
-        <td>The app starts a HealthKit workout session in order to keep recording running in the background. The app does not read additional HealthKit data and does not write user-visible workout summaries to the Health app.</td>
-        <td>For the duration of a recording session.</td>
+        <td>Apple Health</td>
+        <td>
+          With your permission, the watch app reads heart rate and active and
+          resting energy during a session, and saves the session to Health as a
+          paddling workout. The saved workout includes your GPS route, paddle
+          distance, average and top speed, heart rate, calories, and the
+          Downwind session ID. Heart rate is shown live on the watch. We don't
+          upload heart rate or energy data from Health to our servers.
+        </td>
+        <td>During and at the end of a recording session.</td>
       </tr>
       <tr>
-        <td>Session metadata</td>
-        <td>Session ID, recording duration, sample counts, observed sample rates, schema version, SHA-256 checksums of the recorded files, dropped sample counts, and any annotations you add (session type, conditions, focus, notes).</td>
-        <td>Generated automatically; annotations are optional.</td>
+        <td>Files you upload</td>
+        <td>Activity files from other devices (for example Garmin .fit files, or .csv files) that you upload in the web app. These can contain GPS, heart rate, and device details, and we analyze what they contain, including heart rate.</td>
+        <td>When you upload a file.</td>
+      </tr>
+      <tr>
+        <td>Session details</td>
+        <td>Session ID, start time, duration, sample counts and rates, file checksums, piece start/end markers, and anything you add about a session: craft, seat and crew notes, session type, focus, conditions (wind, swell, tide, current), and free-text notes.</td>
+        <td>Generated automatically; the details you add are optional.</td>
       </tr>
       <tr>
         <td>Diagnostics</td>
-        <td>Standard iOS crash reports and performance metrics through Apple's built-in mechanisms, when you opt in via iOS Settings. We do not embed third-party crash or analytics SDKs.</td>
-        <td>If enabled by your device settings.</td>
+        <td>Apple's crash reports and performance data, if you've turned on sharing in iOS Settings. When something fails on our backend, an error report goes to Sentry (see section 4). The app itself has no third-party crash or analytics SDK.</td>
+        <td>When an error happens, or if enabled on your device.</td>
       </tr>
     </tbody>
   </table>
 
-  <h3>What we do not collect</h3>
+  <h3>What we don't collect</h3>
   <ul>
-    <li>We do not collect contacts, photos, or files outside the recorded session bundle.</li>
-    <li>We do not access your microphone or camera.</li>
-    <li>We do not use advertising identifiers (IDFA) or run any ad networks.</li>
-    <li>We do not embed third-party analytics SDKs (no Google Analytics, no Firebase Analytics, no Mixpanel, no Amplitude, no Segment).</li>
+    <li>Contacts, photos, or files other than the session recordings and the activity files you choose to upload.</li>
+    <li>Microphone or camera input.</li>
+    <li>Advertising identifiers (IDFA). We don't use ad networks.</li>
+    <li>Analytics or tracking: no Google Analytics, Firebase Analytics, Mixpanel, Amplitude, or Segment in the app or the web app.</li>
   </ul>
 
   <h2>2. How we use your data</h2>
-  <p>We use the data described above to:</p>
   <ul>
-    <li>Authenticate your account and keep you signed in;</li>
-    <li>Upload, store, and analyze your paddle sessions so we can return bump detection, dead-water identification, and session summary metrics to you;</li>
-    <li>Allow you to view your session history and analysis results;</li>
-    <li>Investigate bugs, reliability issues, and capture-quality problems that you report;</li>
-    <li>Improve the analysis pipeline. Aggregate, de-identified summary statistics may inform model improvements. We do not use the contents of any individual session for marketing or advertising.</li>
+    <li>To sign you in and keep you signed in.</li>
+    <li>To store and analyze your sessions: bump detection, dead-water sections, stroke analysis, and session metrics.</li>
+    <li>To write an AI coaching report for each session (see section 4).</li>
+    <li>To show your session history and results in the app and the web app.</li>
+    <li>To find and fix bugs, including the problems you report to us.</li>
+    <li>To improve the analysis. We may look at aggregate, de-identified statistics for this. We never use an individual session for marketing or advertising.</li>
   </ul>
 
-  <h2>3. How your data is stored and transmitted</h2>
+  <h2>3. Where your data is kept and how it travels</h2>
   <ul>
     <li>
-      <strong>On your devices:</strong> Recordings are written to local storage on
-      the Apple Watch, transferred to your iPhone over WatchConnectivity, and held
-      in the iOS app's sandboxed storage until you upload or delete them.
-      Authentication tokens are stored in the iOS Keychain.
+      <strong>On your devices:</strong> Recordings are saved on the Apple Watch,
+      sent to your iPhone over WatchConnectivity, and kept in the app's storage
+      until you upload or delete them. Sign-in tokens are stored in the iOS
+      Keychain. The web app keeps your sign-in session in your browser's
+      storage.
     </li>
     <li>
-      <strong>In transit:</strong> All communication with the backend uses HTTPS
-      (TLS 1.2+) with certificate pinning. Authentication uses Supabase-issued
-      JWT bearer tokens.
+      <strong>In transit:</strong> Everything goes over HTTPS. The iOS app also
+      uses certificate pinning when it talks to our API.
     </li>
     <li>
-      <strong>On the backend:</strong> Session files and analysis results are
-      stored on infrastructure operated by Fly.io (host of the Downwind Cloud API)
-      and Supabase (host of the authentication service and user-account database).
-      Both providers operate from data centers in the United States.
+      <strong>On our servers:</strong> Your account, session files, and analysis
+      results are stored in Supabase (database, sign-in, and file storage, in
+      the United States). Our API and the web app run on Fly.io, also in the
+      United States.
     </li>
   </ul>
 
   <h2>4. Who we share data with</h2>
   <p>
-    We do not sell, rent, or trade your personal data. We share data only with
-    the following service providers, and only as needed to operate the app:
+    We don't sell, rent, or trade your personal data. These service providers
+    handle data for us, and only to run Downwind:
   </p>
   <ul>
-    <li><strong>Supabase, Inc.</strong> · authentication service. Supabase processes your email address and assigns the account UUID used by the app. See Supabase's privacy notice for details.</li>
-    <li><strong>Fly.io (Fly, Inc.)</strong> · application and storage hosting for the Downwind Cloud API. Session files and analysis results are stored on Fly-managed infrastructure.</li>
-    <li><strong>Apple Inc.</strong> · App Store distribution, TestFlight beta delivery, push notification routing (if used), and platform-level crash reporting if you have opted in.</li>
+    <li><strong>Supabase, Inc.</strong> · Sign-in, database, and file storage. Holds your email, account ID, session files, and analysis results.</li>
+    <li><strong>Fly.io (Fly, Inc.)</strong> · Hosts our API and the web app. Your data passes through Fly's servers when you upload, view, or analyze sessions.</li>
+    <li>
+      <strong>OpenAI or Anthropic</strong> · Writes your AI coaching report. We
+      use one of the two at a time and may switch between them. For each
+      analyzed session we send: the session's metrics (speeds, distances,
+      bumps, dead-water sections, stroke and heart-rate figures where
+      available), its start time, comparisons with your earlier sessions, what
+      you entered about the session (session type, focus, conditions, and your
+      notes), and your profile record, which includes your email address and
+      baseline speed. We don't send your GPS track or raw sensor files.
+    </li>
+    <li><strong>Sentry (Functional Software, Inc.)</strong> · Error reports from our backend. A report includes the error details, the request path and method, and your account ID. It doesn't include what you uploaded or typed, your sign-in tokens, or your email address.</li>
+    <li><strong>Esri</strong> · Map images in the web app. Your browser loads them from Esri's servers, so Esri sees your IP address and the map area you're viewing.</li>
+    <li><strong>Google Fonts</strong> · Fonts for this website and the web app. Your browser loads them from Google, so Google sees your IP address.</li>
+    <li><strong>Apple Inc.</strong> · App Store and TestFlight distribution, Apple Health on your devices, and crash reports if you've turned them on.</li>
   </ul>
   <p>
-    We may also disclose data when required by law, valid legal process, or when
-    necessary to protect the rights, property, or safety of users or the public.
+    We may also disclose data if the law requires it, or to protect the safety
+    of users or the public.
   </p>
 
-  <h2>5. Data retention and deletion</h2>
+  <h2>5. Keeping and deleting your data</h2>
   <p>
-    Sessions you upload are retained until you delete them. You can delete an
-    individual session from the iOS app's session list (this removes both the
-    raw files and the analysis results from the backend). To delete your entire
-    account and all associated data, email
-    <a href="mailto:support@downwindtracker.com">support@downwindtracker.com</a>
-    from the address associated with your account. Account deletion requests are
-    processed within 30 days.
+    We keep your sessions until you delete your account. Deleting a session in
+    the app or the web app removes it from your history and results straight
+    away, but its files and analysis stay on our servers until your account is
+    deleted.
   </p>
   <p>
-    Local recordings that have not been uploaded are removed when you delete the
-    app from your devices.
+    To delete your account and all of its data, email
+    <a href="mailto:support@downwindtracker.com">support@downwindtracker.com</a>
+    from the address you sign in with. We'll process the request within 30 days.
+  </p>
+  <p>
+    Recordings that haven't been uploaded are removed when you delete the app.
+    Workouts saved to Apple Health stay in Health until you delete them there.
   </p>
 
   <h2>6. Your rights</h2>
   <p>
-    Depending on where you live, you may have rights under data-protection laws
-    such as the EU/UK GDPR or the California Consumer Privacy Act (CCPA),
-    including the right to access, correct, port, or delete your personal data,
-    and the right to object to or restrict certain processing. To exercise these
-    rights, contact us at the email below. We will not discriminate against you
-    for exercising any of these rights.
+    Depending on where you live (for example under the EU/UK GDPR or the
+    California Consumer Privacy Act), you can ask to see, correct, export, or
+    delete your personal data, or object to how we use it. Email us to do any of
+    these. Using these rights won't affect how we treat you.
   </p>
 
   <h2>7. Children</h2>
   <p>
-    DownwindTracker is not directed at children under 13, and we do not knowingly
-    collect personal data from children under 13. If you believe a child has
-    provided us with personal data, please contact us so we can delete it.
+    Downwind isn't meant for children under 13, and we don't knowingly collect
+    data from them. If you think a child has given us personal data, contact us
+    and we'll delete it.
   </p>
 
   <h2>8. International transfers</h2>
   <p>
-    The app and its backend are operated from the United States. If you access
-    the app from outside the United States, your data will be transferred to and
-    processed in the United States. By using the app, you consent to this
-    transfer.
+    Downwind is run from the United States, and our servers are there. If you
+    use it from another country, your data is transferred to and processed in
+    the United States.
   </p>
 
   <h2>9. Security</h2>
   <p>
-    We use TLS with certificate pinning for all network transmissions, store
-    authentication tokens in the iOS Keychain, and rely on Supabase and Fly.io
-    for backend security controls. No system is perfectly secure; we will notify
-    affected users of any data breach that materially affects them, as required
-    by applicable law.
+    We use HTTPS for all connections, certificate pinning in the iOS app, the
+    iOS Keychain for sign-in tokens, and the security controls of Supabase and
+    Fly.io. No system is perfectly secure. If a breach affects your data, we'll
+    tell you as the law requires.
   </p>
 
   <h2>10. Changes to this policy</h2>
   <p>
-    We may update this policy from time to time. Material changes will be
-    indicated by the "Last updated" date at the top of this page and, where
-    appropriate, communicated in-app or by email. Your continued use of the app
-    after a change indicates acceptance of the revised policy.
+    When we change this policy, we'll update the date at the top of this page.
+    For bigger changes we'll also tell you in the app or by email.
   </p>
 
   <h2>11. Contact</h2>
